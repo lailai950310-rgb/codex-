@@ -1,4 +1,5 @@
-const STORAGE_KEY = "vitality-fitness-v2";
+const STORAGE_KEY = "vitality-fitness-v3";
+const LEGACY_STORAGE_KEYS = ["vitality-fitness-v2"];
 const bodyParts = ["背部", "臀部", "肩部", "手臂", "胸部", "核心", "腿部", "全身"];
 const partColors = ["#20bd55", "#44bde9", "#ffc92f", "#8c63ef", "#ff8da1", "#54c7b0", "#ff9e45", "#8da0b5"];
 const homePartIcons = {
@@ -12,22 +13,10 @@ const homePartIcons = {
 };
 
 const defaultState = {
-  profile: { name: "元气小桃子", height: 165, weight: 54.2, fat: 25.8, goal: 4 },
+  profile: { name: "糖糖", height: null, goal: 4 },
   reminder: { enabled: true, time: "19:00" },
-  workouts: [
-    { id: "demo-1", date: offsetDate(0), type: "力量训练", duration: 45, intensity: "适中", parts: ["背部", "核心"], note: "状态很好，动作控制更稳定了。" },
-    { id: "demo-2", date: offsetDate(-2), type: "有氧训练", duration: 30, intensity: "适中", parts: [], note: "慢跑 3 公里。" },
-    { id: "demo-3", date: offsetDate(-4), type: "力量训练", duration: 60, intensity: "挑战", parts: ["臀部", "腿部"], note: "深蹲完成 4 组。" }
-  ],
-  bodyRecords: [
-    { date: offsetDate(-42), weight: 55.1, fat: 27.3 },
-    { date: offsetDate(-35), weight: 55.6, fat: 26.1 },
-    { date: offsetDate(-28), weight: 55.4, fat: 26.3 },
-    { date: offsetDate(-21), weight: 54.7, fat: 24.8 },
-    { date: offsetDate(-14), weight: 54.5, fat: 25.7 },
-    { date: offsetDate(-7), weight: 54.0, fat: 24.1 },
-    { date: offsetDate(0), weight: 54.2, fat: 25.8 }
-  ]
+  workouts: [],
+  bodyRecords: []
 };
 
 let state = loadState();
@@ -239,9 +228,11 @@ function renderHome() {
   setText("weekGoal", state.profile.goal);
   setText("bannerWeekCount", weekRecords.length);
   setText("monthCount", monthRecords.length);
-  setText("homeWeight", latest.weight.toFixed(1));
+  setText("homeWeight", latest ? latest.weight.toFixed(1) : "--");
   setText("homeFat", latestFat ? latestFat.fat.toFixed(1) : "--");
-  setText("weightChange", previous ? `较上次 ${signed(latest.weight - previous.weight)} kg` : "等待更多记录");
+  setText("weightChange", latest
+    ? (previous ? `较上次 ${signed(latest.weight - previous.weight)} kg` : "等待更多记录")
+    : "尚未记录");
   setText("fatChange", latestFat && previousFat
     ? `较上次 ${signed(latestFat.fat - previousFat.fat)}%`
     : "体脂率选填");
@@ -292,9 +283,10 @@ function renderTrends() {
   setText("trendStrength", records.filter((item) => item.type === "力量训练").length);
   setText("trendCardio", records.filter((item) => isCardioType(item.type)).length);
   setText("trendMonthCount", recordsForPeriod("month").length);
-  const heights = [18, 42, 25, 20, 32, 28, 48, 29, 55, 39, 31, 61];
-  document.querySelector("#frequencyBars").innerHTML = heights.map((height) =>
-    `<div><i style="height:${height}px"></i></div>`
+  const frequencyCounts = countRecordsByMonthSegment(recordsForPeriod("month"));
+  const maxFrequency = Math.max(1, ...frequencyCounts);
+  document.querySelector("#frequencyBars").innerHTML = frequencyCounts.map((count) =>
+    `<div><i style="height:${count ? 12 + Math.round(count / maxFrequency * 49) : 6}px"></i></div>`
   ).join("");
 
   const counts = countParts(records);
@@ -318,7 +310,7 @@ function renderTrends() {
 }
 
 function renderCharts() {
-  drawLineChart("weightChart", state.bodyRecords.map((item) => item.weight), "#16a34a", "kg");
+  drawLineChart("weightChart", state.bodyRecords.map((item) => item.weight).filter(Number.isFinite), "#16a34a", "kg");
   drawLineChart(
     "fatChart",
     state.bodyRecords.map((item) => item.fat).filter(Number.isFinite),
@@ -390,8 +382,8 @@ function renderProfile() {
   const latestFat = latestFatRecord();
   const weekCount = recordsForPeriod("week").length;
   setText("profileName", state.profile.name);
-  setText("profileHeight", state.profile.height);
-  setText("profileWeight", latest.weight.toFixed(1));
+  setText("profileHeight", Number.isFinite(state.profile.height) ? state.profile.height : "--");
+  setText("profileWeight", latest ? latest.weight.toFixed(1) : "--");
   setText("profileFat", latestFat ? latestFat.fat.toFixed(1) : "--");
   setText("goalProgressText", weekCount);
   setText("goalTargetText", state.profile.goal);
@@ -431,7 +423,7 @@ function openModal(type) {
     content.innerHTML = `
       <form class="modal-form" id="bodyForm">
         <label>日期<input name="date" type="date" value="${formatDate(new Date())}" required /></label>
-        <label>体重 kg<input name="weight" type="number" min="25" max="250" step="0.1" value="${latest.weight}" required /></label>
+        <label>体重 kg<input name="weight" type="number" min="25" max="250" step="0.1" value="${latest ? latest.weight : ""}" placeholder="请输入体重" required /></label>
         <label>体脂率 % <small>（选填）</small><input name="fat" type="number" min="3" max="70" step="0.1" value="${latestFat ? latestFat.fat : ""}" placeholder="可不填" /></label>
         <button class="primary-button" type="submit">保存身体数据</button>
       </form>`;
@@ -441,7 +433,7 @@ function openModal(type) {
     content.innerHTML = `
       <form class="modal-form" id="profileForm">
         <label>昵称<input name="name" maxlength="12" value="${escapeHtml(state.profile.name)}" required /></label>
-        <label>身高 cm<input name="height" type="number" min="100" max="220" value="${state.profile.height}" required /></label>
+        <label>身高 cm<input name="height" type="number" min="100" max="220" value="${Number.isFinite(state.profile.height) ? state.profile.height : ""}" placeholder="请输入身高" required /></label>
         <label>每周目标 次<input name="goal" type="number" min="1" max="14" value="${state.profile.goal}" required /></label>
         <button class="primary-button" type="submit">保存个人信息</button>
       </form>`;
@@ -682,6 +674,15 @@ function countRecordsByWeekday(records) {
   return counts;
 }
 
+function countRecordsByMonthSegment(records) {
+  const counts = Array(12).fill(0);
+  records.forEach((item) => {
+    const day = new Date(`${item.date}T00:00:00`).getDate();
+    counts[Math.min(11, Math.floor((day - 1) / 3))] += 1;
+  });
+  return counts;
+}
+
 function countParts(records) {
   return records.filter((item) => !isCardioType(item.type)).flatMap((item) => item.parts || []).reduce((acc, part) => {
     acc[part] = (acc[part] || 0) + 1;
@@ -705,14 +706,14 @@ function workoutTypeLabel(type) {
 }
 
 function latestBody() {
-  return state.bodyRecords.at(-1) || { weight: state.profile.weight, fat: state.profile.fat };
+  return state.bodyRecords.at(-1) || null;
 }
 
 function latestFatRecord() {
   for (let index = state.bodyRecords.length - 1; index >= 0; index -= 1) {
     if (Number.isFinite(state.bodyRecords[index].fat)) return state.bodyRecords[index];
   }
-  return Number.isFinite(state.profile.fat) ? { fat: state.profile.fat } : null;
+  return null;
 }
 
 function previousFatRecord() {
@@ -722,6 +723,7 @@ function previousFatRecord() {
 
 function loadState() {
   try {
+    LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
     return stored ? { ...defaultState, ...stored, profile: { ...defaultState.profile, ...stored.profile } } : structuredClone(defaultState);
   } catch {
