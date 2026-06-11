@@ -65,12 +65,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   margin: -18px -16px 22px;
   border: 0;
   border-radius: 0 0 34px 34px;
-  padding: 26px 0 0;
-  background:
-    radial-gradient(circle at 92% 2%, rgba(255,255,255,.92), transparent 35%),
-    radial-gradient(circle at 5% 90%, rgba(178,239,195,.42), transparent 40%),
-    linear-gradient(145deg, #f5fff0 0%, #edf9e9 48%, #e8f7e7 100%);
-  box-shadow: 0 12px 30px rgba(62, 119, 69, .07);
+  min-height: 480px;
+  padding: 0;
+  background: #173623;
+  box-shadow: none;
 }
 @media (max-width: 719px) {
   .home-hero-shell {
@@ -80,27 +78,26 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   }
 }
 .home-hero-shell::before {
-  position: absolute;
-  top: -54px;
-  right: -48px;
-  z-index: -1;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  background: rgba(187, 235, 175, .22);
-  content: "";
+  display: none;
 }
 .home-hero-shell .topbar {
-  min-height: 88px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 4;
+  min-height: 0;
   margin: 0;
-  padding: 0 20px 18px;
+  padding: 38px 20px 0;
 }
 .home-hero-shell .topbar h1 {
-  max-width: 280px;
+  max-width: 270px;
+  color: #fff;
   font-size: 28px;
   line-height: 1.15;
+  text-shadow: 0 2px 14px rgba(7, 27, 13, .34);
 }
-.home-hero-shell .hello { color: #66806a; font-weight: 700; }
+.home-hero-shell .hello { color: #d5f1d3; font-weight: 700; text-shadow: 0 2px 10px rgba(7, 27, 13, .3); }
 .home-hero-shell .avatar-button {
   width: 52px;
   height: 52px;
@@ -134,23 +131,22 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .strength-banner {
   position: relative;
   display: block;
-  min-height: 268px;
+  min-height: 480px;
   overflow: hidden;
   touch-action: pan-y;
   padding: 0;
   border: 0;
-  border-top: 1px solid rgba(255,255,255,.76);
-  border-radius: 28px 28px 0 0;
-  background: #dcebd8;
-  box-shadow: 0 -4px 20px rgba(47, 101, 57, .06);
+  border-radius: 0 0 34px 34px;
+  background: #173623;
+  box-shadow: none;
 }
 .strength-banner::after {
   position: absolute;
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(90deg, rgba(15,48,27,.72) 0%, rgba(25,65,36,.48) 40%, rgba(41,78,48,.05) 72%),
-    linear-gradient(0deg, rgba(14,45,24,.18), transparent 52%);
+    linear-gradient(90deg, rgba(7,31,17,.74) 0%, rgba(16,45,25,.48) 48%, rgba(24,51,30,.08) 78%),
+    linear-gradient(0deg, rgba(7,25,13,.42), transparent 46%);
   content: "";
 }
 .strength-banner > .banner-slides {
@@ -177,25 +173,28 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 }
 .strength-banner .strength-banner-copy {
   position: absolute;
-  top: 24px;
-  bottom: 22px;
+  top: 182px;
+  bottom: auto;
   left: 20px;
   z-index: 2;
   display: flex;
   width: 53%;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-start;
 }
 .strength-banner .soft-label {
+  order: 3;
+  margin-top: 22px;
   color: #184626;
   background: rgba(229, 255, 208, .92);
   box-shadow: inset 0 1px 0 #fff, 0 4px 12px rgba(36, 95, 47, .11);
 }
 .strength-banner .soft-label b { font: inherit; }
 .strength-banner strong {
+  order: 1;
   display: block;
-  margin-top: 18px;
+  margin-top: 0;
   color: #fff;
   font-size: 23px;
   line-height: 1.35;
@@ -203,6 +202,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   text-shadow: 0 2px 10px rgba(11, 50, 23, .28);
 }
 .strength-banner p {
+  order: 2;
   margin-top: 9px;
   color: rgba(255,255,255,.82);
   font-size: 12px;
@@ -212,7 +212,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .strength-banner > .banner-dots {
   position: absolute;
   right: 20px;
-  bottom: 16px;
+  bottom: 186px;
   z-index: 3;
   display: flex;
   width: auto;
@@ -240,7 +240,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   color: var(--green-dark); background: rgba(255,255,255,.72); font-size: 12px; font-weight: 800;
 }
 
-.home-overview { margin: 16px 0 12px; }
+.home-overview { position: relative; z-index: 5; margin: -172px 0 12px; }
 .overview-heading { margin: 22px 2px 12px; }
 .overview-heading h2 { font-size: 20px; letter-spacing: -.3px; }
 .trend-more { display: inline-flex; align-items: center; gap: 3px; }
@@ -250,11 +250,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   position: relative;
   display: grid;
   width: 100%;
-  min-height: 300px;
+  min-height: 252px;
   overflow: hidden;
   border: 1px solid rgba(220, 232, 216, .94);
   border-radius: 28px;
-  padding: 18px 18px 20px;
+  padding: 16px 18px 17px;
   color: var(--ink);
   background:
     radial-gradient(circle at 50% 40%, rgba(237, 255, 232, .72), transparent 43%),
@@ -287,8 +287,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .weight-gauge {
   position: relative;
   width: min(86%, 300px);
-  height: 135px;
-  margin: 4px auto -8px;
+  height: 112px;
+  margin: 0 auto -5px;
 }
 .weight-gauge svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .weight-gauge path {
@@ -311,8 +311,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   position: absolute;
   right: 50%;
   bottom: 4px;
-  width: 124px;
-  height: 112px;
+  width: 108px;
+  height: 96px;
   max-width: none;
   transform: translateX(50%);
   border-radius: 0;
@@ -332,6 +332,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .weight-reading small { font-size: 18px; font-weight: 900; text-transform: uppercase; }
 .bmi-reading { margin-top: 8px; color: #2fb65d; font-size: 14px; font-weight: 900; }
 .weight-encouragement { margin-top: 8px; color: #7b837d; font-size: 13px; font-weight: 700; }
+.overview-actions { margin: 12px 0 0; }
+.overview-actions .primary-button,
+.overview-actions .secondary-button { min-height: 50px; border-radius: 17px; }
 .activity-stats-grid { gap: 12px; }
 .activity-stats-grid .stat-card {
   min-height: 170px;

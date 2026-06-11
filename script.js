@@ -240,9 +240,9 @@ function renderHome() {
   setText("weekGoal", state.profile.goal);
   setText("bannerWeekCount", weekRecords.length);
   setText("monthCount", monthRecords.length);
-  setText("homeWeight", latest ? latest.weight.toFixed(1) : "--");
+  setText("homeWeight", latest ? kgToJin(latest.weight).toFixed(1) : "--");
   setText("weightChange", latest
-    ? (previous ? `较上次 ${signed(latest.weight - previous.weight)} kg，继续保持` : "今天保持得不错，继续加油")
+    ? (previous ? `较上次 ${signed(kgToJin(latest.weight - previous.weight))} 斤，继续保持` : "今天保持得不错，继续加油")
     : "点击记录身体数据");
   const bmi = latest && Number.isFinite(state.profile.height)
     ? latest.weight / ((state.profile.height / 100) ** 2)
@@ -334,7 +334,7 @@ function renderTrends() {
 }
 
 function renderCharts() {
-  drawLineChart("weightChart", state.bodyRecords.map((item) => item.weight).filter(Number.isFinite), "#16a34a", "kg");
+  drawLineChart("weightChart", state.bodyRecords.map((item) => kgToJin(item.weight)).filter(Number.isFinite), "#16a34a", "斤");
   drawLineChart(
     "fatChart",
     state.bodyRecords.map((item) => item.fat).filter(Number.isFinite),
@@ -407,7 +407,7 @@ function renderProfile() {
   const weekCount = recordsForPeriod("week").length;
   setText("profileName", state.profile.name);
   setText("profileHeight", Number.isFinite(state.profile.height) ? state.profile.height : "--");
-  setText("profileWeight", latest ? latest.weight.toFixed(1) : "--");
+  setText("profileWeight", latest ? kgToJin(latest.weight).toFixed(1) : "--");
   setText("profileFat", latestFat ? latestFat.fat.toFixed(1) : "--");
   setText("goalProgressText", weekCount);
   setText("goalTargetText", state.profile.goal);
@@ -468,7 +468,7 @@ function openModal(type) {
     content.innerHTML = `
       <form class="modal-form" id="bodyForm">
         <label>日期<input name="date" type="date" value="${formatDate(new Date())}" required /></label>
-        <label>体重 kg<input name="weight" type="number" min="25" max="250" step="0.1" value="${latest ? latest.weight : ""}" placeholder="请输入体重" required /></label>
+        <label>体重 斤<input name="weight" type="number" min="50" max="500" step="0.1" value="${latest ? kgToJin(latest.weight).toFixed(1) : ""}" placeholder="请输入体重（斤）" required /></label>
         <label>体脂率 % <small>（选填）</small><input name="fat" type="number" min="3" max="70" step="0.1" value="${latestFat ? latestFat.fat : ""}" placeholder="可不填" /></label>
         <button class="primary-button" type="submit">保存身体数据</button>
       </form>`;
@@ -587,7 +587,7 @@ async function saveBodyRecord(event) {
   const record = {
     id: createUuid(),
     date: data.get("date"),
-    weight: Number(data.get("weight"))
+    weight: jinToKg(Number(data.get("weight")))
   };
   if (fatValue !== "") record.fat = Number(fatValue);
   if (currentUser && !(await upsertCloudBodyRecord(record))) return;
@@ -1102,6 +1102,14 @@ function formatDate(date) {
 function signed(value) {
   const rounded = Number(value.toFixed(1));
   return `${rounded > 0 ? "+" : ""}${rounded.toFixed(1)}`;
+}
+
+function kgToJin(value) {
+  return Number(value) * 2;
+}
+
+function jinToKg(value) {
+  return Number(value) / 2;
 }
 
 function escapeHtml(value) {
