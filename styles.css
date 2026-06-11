@@ -216,13 +216,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .week-bars .done:nth-child(6) i { background: linear-gradient(90deg, #12b77b, #68e5a8); }
 .week-bars .done:nth-child(7) i { background: linear-gradient(90deg, #ffc21e, #eeec48); }
 .week-bars small, .spark-bars small { color: var(--muted); font-size: 9px; }
-.spark-bars div:nth-child(1) i { background: linear-gradient(90deg, #23bdd4, #77e7e8); }
-.spark-bars div:nth-child(2) i { background: linear-gradient(90deg, #47ce68, #a8ed3e); }
-.spark-bars div:nth-child(3) i { background: linear-gradient(90deg, #ffb42c, #ffdd4e); }
-.spark-bars div:nth-child(4) i { background: linear-gradient(90deg, #ff7d45, #ffab6a); }
-.spark-bars div:nth-child(5) i { background: linear-gradient(90deg, #7b68e8, #b48dff); }
-.spark-bars div:nth-child(6) i { background: linear-gradient(90deg, #28addf, #74dfff); }
-.spark-bars div:nth-child(7) i { background: linear-gradient(90deg, #17b98a, #62dfbc); }
+.spark-bars .done:nth-child(1) i { background: linear-gradient(90deg, #23bdd4, #77e7e8); }
+.spark-bars .done:nth-child(2) i { background: linear-gradient(90deg, #47ce68, #a8ed3e); }
+.spark-bars .done:nth-child(3) i { background: linear-gradient(90deg, #ffb42c, #ffdd4e); }
+.spark-bars .done:nth-child(4) i { background: linear-gradient(90deg, #ff7d45, #ffab6a); }
+.spark-bars .done:nth-child(5) i { background: linear-gradient(90deg, #7b68e8, #b48dff); }
+.spark-bars .done:nth-child(6) i { background: linear-gradient(90deg, #28addf, #74dfff); }
+.spark-bars .done:nth-child(7) i { background: linear-gradient(90deg, #17b98a, #62dfbc); }
 .mini-area-chart {
   display: block;
   width: 100%;

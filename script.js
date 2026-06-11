@@ -188,6 +188,7 @@ function renderHome() {
   const latestFat = latestFatRecord();
   const previousFat = previousFatRecord();
   setText("weekCount", weekRecords.length);
+  setText("weekGoal", state.profile.goal);
   setText("bannerWeekCount", weekRecords.length);
   setText("monthCount", monthRecords.length);
   setText("homeWeight", latest.weight.toFixed(1));
@@ -197,14 +198,21 @@ function renderHome() {
     ? `较上次 ${signed(latestFat.fat - previousFat.fat)}%`
     : "体脂率选填");
 
-  const activeDays = new Set(weekRecords.map((item) => new Date(item.date).getDay()));
+  const weekDayCounts = countRecordsByWeekday(weekRecords);
+  const maxWeekDayCount = Math.max(1, ...weekDayCounts);
   document.querySelector("#weekBars").innerHTML = ["一","二","三","四","五","六","日"].map((day, index) => {
-    const jsDay = index === 6 ? 0 : index + 1;
-    return `<div class="${activeDays.has(jsDay) ? "done" : ""}"><i style="height:${activeDays.has(jsDay) ? 28 + (index % 3) * 5 : 9}px"></i><small>${day}</small></div>`;
+    const count = weekDayCounts[index];
+    const height = count ? 16 + Math.round(count / maxWeekDayCount * 20) : 9;
+    return `<div class="${count ? "done" : ""}" title="${day}：${count} 次"><i style="height:${height}px"></i><small>${day}</small></div>`;
   }).join("");
-  document.querySelector("#monthBars").innerHTML = [16, 9, 23, 13, 31, 20, 36].map((height, index) =>
-    `<div><i style="height:${height}px"></i><small>${index + 1}</small></div>`
-  ).join("");
+
+  const monthDayCounts = countRecordsByWeekday(monthRecords);
+  const maxMonthDayCount = Math.max(1, ...monthDayCounts);
+  document.querySelector("#monthBars").innerHTML = ["一","二","三","四","五","六","日"].map((day, index) => {
+    const count = monthDayCounts[index];
+    const height = count ? 16 + Math.round(count / maxMonthDayCount * 20) : 9;
+    return `<div class="${count ? "done" : ""}" title="本月周${day}：${count} 次"><i style="height:${height}px"></i><small>${day}</small></div>`;
+  }).join("");
 }
 
 function renderRecords() {
@@ -528,11 +536,21 @@ function recordsForPeriod(period) {
   if (period === "week") {
     const day = boundary.getDay();
     boundary.setDate(boundary.getDate() - (day === 0 ? 6 : day - 1));
+  } else if (period === "month") {
+    boundary.setDate(1);
   } else {
-    const days = period === "month" ? 30 : 90;
-    boundary.setDate(boundary.getDate() - days + 1);
+    boundary.setDate(boundary.getDate() - 89);
   }
   return state.workouts.filter((item) => new Date(`${item.date}T00:00:00`) >= boundary);
+}
+
+function countRecordsByWeekday(records) {
+  const counts = Array(7).fill(0);
+  records.forEach((item) => {
+    const day = new Date(`${item.date}T00:00:00`).getDay();
+    counts[day === 0 ? 6 : day - 1] += 1;
+  });
+  return counts;
 }
 
 function countParts(records) {
