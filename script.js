@@ -220,7 +220,7 @@ function renderParts() {
   const weeklyParts = countParts(recordsForPeriod("week"));
   const visibleParts = ["背部", "胸部", "肩部", "手臂", "臀部", "腿部", "核心"];
   document.querySelector("#homeBodyParts").innerHTML = visibleParts.map((part) =>
-    `<button class="body-part" type="button" data-go="records" aria-label="${part}，本周训练 ${weeklyParts[part] || 0} 次">
+    `<button class="body-part" type="button" data-open="workout-history" aria-label="${part}，本周训练 ${weeklyParts[part] || 0} 次">
       <span class="part-icon">${homePartIcons[part]}</span>
       <b>${part}</b>
       <small>${weeklyParts[part] || 0} 次</small>
@@ -409,7 +409,22 @@ function openModal(type) {
     document.querySelector("#page-records").scrollIntoView({ behavior: "smooth" });
     return;
   }
-  if (type === "body") {
+  if (type === "workout-history") {
+    title.textContent = "训练记录";
+    content.innerHTML = `
+      <div class="history-tabs" id="historyTabs">
+        <button class="active" type="button" data-history-period="week">本周</button>
+        <button type="button" data-history-period="month">本月</button>
+      </div>
+      <div id="workoutHistoryContent"></div>`;
+    content.querySelector("#historyTabs").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-history-period]");
+      if (!button) return;
+      content.querySelectorAll("[data-history-period]").forEach((item) => item.classList.toggle("active", item === button));
+      renderWorkoutHistory(button.dataset.historyPeriod);
+    });
+    renderWorkoutHistory("week");
+  } else if (type === "body") {
     const latest = latestBody();
     const latestFat = latestFatRecord();
     title.textContent = "记录身体数据";
@@ -439,6 +454,68 @@ function openModal(type) {
   }
   document.querySelector("#modalBackdrop").hidden = false;
   document.body.style.overflow = "hidden";
+}
+
+function renderWorkoutHistory(period) {
+  const target = document.querySelector("#workoutHistoryContent");
+  if (!target) return;
+  const records = recordsForPeriod(period).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const totalMinutes = records.reduce((sum, item) => sum + Number(item.duration || 0), 0);
+  const partSummary = summarizeWorkoutParts(records);
+
+  target.innerHTML = `
+    <div class="history-summary">
+      <div><span>训练次数</span><strong>${records.length}<small>次</small></strong></div>
+      <div><span>训练时长</span><strong>${totalMinutes}<small>分钟</small></strong></div>
+    </div>
+    <section class="history-parts">
+      <h3>训练部位与时长</h3>
+      ${partSummary.length
+        ? `<div class="history-part-grid">${partSummary.map((item) => `
+            <div>
+              <b>${escapeHtml(item.part)}</b>
+              <span>${item.count} 次 · ${item.minutes} 分钟</span>
+            </div>`).join("")}</div>`
+        : `<p class="history-empty">该周期内暂无力量训练部位记录</p>`}
+    </section>
+    <section class="history-list-section">
+      <h3>训练明细</h3>
+      ${records.length
+        ? `<div class="history-list">${records.map((item) => {
+            const parts = isCardioType(item.type) ? "" : (item.parts || []).join("、");
+            return `<article class="history-item">
+              <div class="history-date"><b>${formatHistoryDate(item.date)}</b><span>${workoutWeekday(item.date)}</span></div>
+              <div>
+                <strong>${escapeHtml(workoutTypeLabel(item.type))}</strong>
+                <p>${parts ? `${escapeHtml(parts)} · ` : ""}${escapeHtml(item.intensity)}</p>
+              </div>
+              <em>${Number(item.duration)}<small>分钟</small></em>
+            </article>`;
+          }).join("")}</div>`
+        : `<p class="history-empty">该周期内还没有保存训练记录</p>`}
+    </section>`;
+}
+
+function summarizeWorkoutParts(records) {
+  const summary = new Map();
+  records.filter((item) => !isCardioType(item.type)).forEach((item) => {
+    (item.parts || []).forEach((part) => {
+      const current = summary.get(part) || { part, count: 0, minutes: 0 };
+      current.count += 1;
+      current.minutes += Number(item.duration || 0);
+      summary.set(part, current);
+    });
+  });
+  return [...summary.values()].sort((a, b) => b.minutes - a.minutes || b.count - a.count);
+}
+
+function formatHistoryDate(value) {
+  const date = new Date(`${value}T00:00:00`);
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+function workoutWeekday(value) {
+  return `周${["日", "一", "二", "三", "四", "五", "六"][new Date(`${value}T00:00:00`).getDay()]}`;
 }
 
 function openReminderModal() {

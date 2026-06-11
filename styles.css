@@ -521,6 +521,73 @@ canvas { display: block; width: 100%; margin-top: 10px; }
 .modal-form label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 700; }
 .modal-form label small { font-size: 11px; font-weight: 500; }
 .modal-form input { width: 100%; border: 1px solid var(--line); border-radius: 14px; padding: 11px; color: var(--ink); background: white; }
+.history-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  border-radius: 14px;
+  padding: 4px;
+  background: #eef6eb;
+}
+.history-tabs button {
+  border: 0;
+  border-radius: 11px;
+  padding: 9px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 800;
+}
+.history-tabs button.active {
+  color: #147a35;
+  background: white;
+  box-shadow: 0 3px 10px rgba(38, 92, 49, .1);
+}
+.history-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+.history-summary > div {
+  border-radius: 16px;
+  padding: 14px;
+  background: linear-gradient(145deg, #f4fbed, #eef8f1);
+}
+.history-summary span { color: var(--muted); font-size: 11px; }
+.history-summary strong { display: block; margin-top: 5px; font-size: 24px; }
+.history-summary small { margin-left: 3px; font-size: 11px; }
+.history-parts, .history-list-section { margin-top: 20px; }
+.history-parts h3, .history-list-section h3 { margin-bottom: 10px; font-size: 14px; }
+.history-part-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.history-part-grid > div {
+  display: grid;
+  gap: 3px;
+  border: 1px solid #e3eee0;
+  border-radius: 13px;
+  padding: 10px 12px;
+  background: #fbfdf9;
+}
+.history-part-grid b { font-size: 12px; }
+.history-part-grid span { color: var(--muted); font-size: 10px; }
+.history-list { display: grid; gap: 8px; }
+.history-item {
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  border-radius: 15px;
+  padding: 11px;
+  background: #f7faf6;
+}
+.history-date { display: grid; justify-items: center; gap: 2px; }
+.history-date b { color: var(--green-dark); font-size: 13px; }
+.history-date span { color: var(--muted); font-size: 9px; }
+.history-item > div:nth-child(2) strong { font-size: 12px; }
+.history-item p { margin-top: 3px; color: var(--muted); font-size: 10px; }
+.history-item em { color: #1b6935; font-size: 18px; font-style: normal; font-weight: 900; text-align: right; }
+.history-item em small { display: block; color: var(--muted); font-size: 9px; font-weight: 600; }
+.history-empty { border-radius: 14px; padding: 16px; color: var(--muted); background: #f7faf6; text-align: center; font-size: 12px; }
 .info-copy { color: #526057; font-size: 13px; line-height: 1.8; }
 .install-guide {
   border: 1px solid #dcebd7;
