@@ -12,7 +12,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/profile-avatar-girl.png" />
     <title>元气练习生</title>
-    <link rel="stylesheet" href="styles.css?v=22" />
+    <link rel="stylesheet" href="styles.css?v=24" />
   </head>
   <body>
     <main class="app" id="app">
@@ -57,54 +57,40 @@
         </section>
 
         <section class="home-overview" aria-labelledby="homeOverviewTitle">
+          <button class="weight-summary-card" type="button" data-open="body" aria-label="查看并记录身体数据">
+            <span class="weight-card-title">
+              <i aria-hidden="true">kg</i>
+              <b>当前体重</b>
+            </span>
+            <div class="weight-gauge">
+              <svg viewBox="0 0 240 132" aria-hidden="true">
+                <path class="gauge-track" pathLength="100" d="M22 116 A98 98 0 0 1 218 116" />
+                <path class="gauge-progress" id="weightGaugeProgress" pathLength="100" d="M22 116 A98 98 0 0 1 218 116" />
+                <circle cx="22" cy="116" r="8" />
+              </svg>
+              <img src="assets/hero-green-ip.png" alt="绿色健身伙伴" />
+            </div>
+            <strong class="weight-reading"><b id="homeWeight">--</b><small>kg</small></strong>
+            <p class="bmi-reading" id="homeBmi">记录身高和体重后查看 BMI</p>
+            <span class="weight-encouragement" id="weightChange">点击记录身体数据</span>
+          </button>
+
           <div class="section-heading overview-heading">
-            <h2 id="homeOverviewTitle">数据概览</h2>
+            <h2 id="homeOverviewTitle">运动数据</h2>
             <button class="text-button trend-more" type="button" data-go="trends">
               查看趋势 <span aria-hidden="true">›</span>
             </button>
           </div>
-          <div class="stats-grid">
-            <article class="stat-card">
+          <div class="stats-grid activity-stats-grid">
+            <article class="stat-card weekly-activity-card">
               <span>本周运动</span>
               <strong><b id="weekCount">0</b> / <b id="weekGoal">4</b><small>次</small></strong>
               <div class="week-bars" id="weekBars"></div>
             </article>
-            <article class="stat-card">
+            <article class="stat-card monthly-activity-card">
               <span>本月运动</span>
               <strong><b id="monthCount">0</b><small>次</small></strong>
               <div class="spark-bars" id="monthBars"></div>
-            </article>
-            <article class="stat-card">
-              <span>当前体重</span>
-              <strong><b id="homeWeight">--</b><small>kg</small></strong>
-              <p id="weightChange">尚未记录</p>
-              <svg class="mini-area-chart weight-chart-mini" viewBox="0 0 150 34" aria-hidden="true">
-                <defs>
-                  <linearGradient id="weightArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#34d875" stop-opacity=".62" />
-                    <stop offset="1" stop-color="#bdf6d0" stop-opacity=".12" />
-                  </linearGradient>
-                </defs>
-                <path class="area" d="M2 28 C22 20, 38 22, 54 15 S88 17, 106 11 S133 8, 148 12 L148 34 L2 34 Z" />
-                <path class="line" d="M2 28 C22 20, 38 22, 54 15 S88 17, 106 11 S133 8, 148 12" />
-                <circle cx="148" cy="12" r="3.5" />
-              </svg>
-            </article>
-            <article class="stat-card">
-              <span>当前体脂</span>
-              <strong><b id="homeFat">--</b><small>%</small></strong>
-              <p id="fatChange">体脂率选填</p>
-              <svg class="mini-area-chart fat-chart-mini" viewBox="0 0 150 34" aria-hidden="true">
-                <defs>
-                  <linearGradient id="fatArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#32b6f2" stop-opacity=".62" />
-                    <stop offset="1" stop-color="#c9efff" stop-opacity=".12" />
-                  </linearGradient>
-                </defs>
-                <path class="area" d="M2 10 C20 7, 38 12, 55 11 S84 16, 102 19 S132 18, 148 25 L148 34 L2 34 Z" />
-                <path class="line" d="M2 10 C20 7, 38 12, 55 11 S84 16, 102 19 S132 18, 148 25" />
-                <circle cx="148" cy="25" r="3.5" />
-              </svg>
             </article>
           </div>
         </section>
@@ -373,6 +359,6 @@
     <input id="importFile" type="file" accept="application/json,.json" hidden />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=20"></script>
-    <script src="script.js?v=22"></script>
+    <script src="script.js?v=24"></script>
   </body>
 </html>

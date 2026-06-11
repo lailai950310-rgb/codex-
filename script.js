@@ -236,36 +236,45 @@ function renderHome() {
   const monthRecords = recordsForPeriod("month");
   const latest = latestBody();
   const previous = state.bodyRecords.at(-2);
-  const latestFat = latestFatRecord();
-  const previousFat = previousFatRecord();
   setText("weekCount", weekRecords.length);
   setText("weekGoal", state.profile.goal);
   setText("bannerWeekCount", weekRecords.length);
   setText("monthCount", monthRecords.length);
   setText("homeWeight", latest ? latest.weight.toFixed(1) : "--");
-  setText("homeFat", latestFat ? latestFat.fat.toFixed(1) : "--");
   setText("weightChange", latest
-    ? (previous ? `较上次 ${signed(latest.weight - previous.weight)} kg` : "等待更多记录")
-    : "尚未记录");
-  setText("fatChange", latestFat && previousFat
-    ? `较上次 ${signed(latestFat.fat - previousFat.fat)}%`
-    : "体脂率选填");
+    ? (previous ? `较上次 ${signed(latest.weight - previous.weight)} kg，继续保持` : "今天保持得不错，继续加油")
+    : "点击记录身体数据");
+  const bmi = latest && Number.isFinite(state.profile.height)
+    ? latest.weight / ((state.profile.height / 100) ** 2)
+    : null;
+  setText("homeBmi", bmi
+    ? `BMI：${bmi.toFixed(1)} ${bmiStatus(bmi)}`
+    : "记录身高和体重后查看 BMI");
+  const gaugeProgress = document.querySelector("#weightGaugeProgress");
+  if (gaugeProgress) {
+    const progress = latest ? Math.max(12, Math.min(92, (latest.weight - 35) / 85 * 100)) : 8;
+    gaugeProgress.style.strokeDasharray = `${progress} 100`;
+  }
 
   const weekDayCounts = countRecordsByWeekday(weekRecords);
-  const maxWeekDayCount = Math.max(1, ...weekDayCounts);
+  const todayIndex = (new Date().getDay() + 6) % 7;
   document.querySelector("#weekBars").innerHTML = ["一","二","三","四","五","六","日"].map((day, index) => {
     const count = weekDayCounts[index];
-    const height = count ? 16 + Math.round(count / maxWeekDayCount * 20) : 9;
-    return `<div class="${count ? "done" : ""}" title="${day}：${count} 次"><i style="height:${height}px"></i><small>${day}</small></div>`;
+    return `<div class="${count ? "done" : ""} ${index === todayIndex ? "today" : ""}" title="${day}：${count} 次"><i></i><small>${day}</small></div>`;
   }).join("");
 
   const monthDayCounts = countRecordsByWeekday(monthRecords);
-  const maxMonthDayCount = Math.max(1, ...monthDayCounts);
   document.querySelector("#monthBars").innerHTML = ["一","二","三","四","五","六","日"].map((day, index) => {
     const count = monthDayCounts[index];
-    const height = count ? 16 + Math.round(count / maxMonthDayCount * 20) : 9;
-    return `<div class="${count ? "done" : ""}" title="本月周${day}：${count} 次"><i style="height:${height}px"></i><small>${day}</small></div>`;
+    return `<div class="${count ? "done" : ""} ${index === todayIndex ? "today" : ""}" title="本月周${day}：${count} 次"><i></i><small>${day}</small></div>`;
   }).join("");
+}
+
+function bmiStatus(value) {
+  if (value < 18.5) return "偏轻";
+  if (value < 24) return "标准";
+  if (value < 28) return "偏高";
+  return "较高";
 }
 
 function renderRecords() {
