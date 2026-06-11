@@ -234,13 +234,15 @@ function renderParts() {
 function renderHome() {
   const weekRecords = recordsForPeriod("week");
   const monthRecords = recordsForPeriod("month");
+  const weekCount = countWorkoutDays(weekRecords);
+  const monthCount = countWorkoutDays(monthRecords);
   const latest = latestBody();
   const previous = state.bodyRecords.at(-2);
   setText("homeNickname", state.profile.name);
-  setText("weekCount", weekRecords.length);
+  setText("weekCount", weekCount);
   setText("weekGoal", state.profile.goal);
-  setText("bannerWeekCount", weekRecords.length);
-  setText("monthCount", monthRecords.length);
+  setText("bannerWeekCount", weekCount);
+  setText("monthCount", monthCount);
   setText("homeWeight", latest ? kgToJin(latest.weight).toFixed(1) : "--");
   setText("weightChange", latest
     ? (previous ? `较上次 ${signed(kgToJin(latest.weight - previous.weight))} 斤，继续保持` : "今天保持得不错，继续加油")
@@ -303,11 +305,12 @@ function renderRecords() {
 
 function renderTrends() {
   const records = recordsForPeriod(activePeriod);
-  setText("trendTotal", records.length);
-  setText("trendStrength", records.filter((item) => item.type === "力量训练").length);
-  setText("trendCardio", records.filter((item) => isCardioType(item.type)).length);
-  setText("trendConditioning", records.filter((item) => isConditioningType(item.type)).length);
-  setText("trendMonthCount", recordsForPeriod("month").length);
+  const workoutDays = countWorkoutDays(records);
+  setText("trendTotal", workoutDays);
+  setText("trendStrength", countWorkoutDays(records.filter((item) => item.type === "力量训练")));
+  setText("trendCardio", countWorkoutDays(records.filter((item) => isCardioType(item.type))));
+  setText("trendConditioning", countWorkoutDays(records.filter((item) => isConditioningType(item.type))));
+  setText("trendMonthCount", countWorkoutDays(recordsForPeriod("month")));
   const frequencyCounts = countRecordsByMonthSegment(recordsForPeriod("month"));
   const maxFrequency = Math.max(1, ...frequencyCounts);
   document.querySelector("#frequencyBars").innerHTML = frequencyCounts.map((count) =>
@@ -326,11 +329,11 @@ function renderTrends() {
   document.querySelector("#partDonut").style.background = entries.length
     ? `conic-gradient(${stops.join(",")})`
     : "#e8eee6";
-  document.querySelector("#partDonut span").innerHTML = `${records.length}<small>次</small>`;
+  document.querySelector("#partDonut span").innerHTML = `${workoutDays}<small>次</small>`;
   document.querySelector("#partLegend").innerHTML = entries.length
     ? entries.map(([part, count], index) => `<div class="legend-row"><i style="background:${partColors[index]}"></i><span>${part}</span><b>${count} 次</b></div>`).join("")
     : `<span class="empty">本周期暂无记录</span>`;
-  setText("trendTip", records.length >= 3 ? "保持现在的节奏，规律训练正在让改变发生。" : "本周期还可以再安排一次轻量训练，稳定比强度更重要。");
+  setText("trendTip", workoutDays >= 3 ? "保持现在的节奏，规律训练正在让改变发生。" : "本周期还可以再安排一次轻量训练，稳定比强度更重要。");
   requestAnimationFrame(renderCharts);
 }
 
@@ -405,7 +408,7 @@ function roundRect(ctx, x, y, width, height, radius) {
 function renderProfile() {
   const latest = latestBody();
   const latestFat = latestFatRecord();
-  const weekCount = recordsForPeriod("week").length;
+  const weekCount = countWorkoutDays(recordsForPeriod("week"));
   setText("profileName", state.profile.name);
   setText("profileHeight", Number.isFinite(state.profile.height) ? state.profile.height : "--");
   setText("profileWeight", latest ? kgToJin(latest.weight).toFixed(1) : "--");
@@ -496,12 +499,13 @@ function renderWorkoutHistory(period) {
   const target = document.querySelector("#workoutHistoryContent");
   if (!target) return;
   const records = recordsForPeriod(period).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const workoutDays = countWorkoutDays(records);
   const totalMinutes = records.reduce((sum, item) => sum + Number(item.duration || 0), 0);
   const partSummary = summarizeWorkoutParts(records);
 
   target.innerHTML = `
     <div class="history-summary">
-      <div><span>训练次数</span><strong>${records.length}<small>次</small></strong></div>
+      <div><span>训练次数</span><strong>${workoutDays}<small>次</small></strong></div>
       <div><span>训练时长</span><strong>${totalMinutes}<small>分钟</small></strong></div>
     </div>
     <section class="history-parts">
@@ -1018,10 +1022,15 @@ function recordsForPeriod(period) {
   return state.workouts.filter((item) => new Date(`${item.date}T00:00:00`) >= boundary);
 }
 
+function countWorkoutDays(records) {
+  return new Set(records.map((item) => item.date).filter(Boolean)).size;
+}
+
 function countRecordsByWeekday(records) {
   const counts = Array(7).fill(0);
-  records.forEach((item) => {
-    const day = new Date(`${item.date}T00:00:00`).getDay();
+  const dates = new Set(records.map((item) => item.date).filter(Boolean));
+  dates.forEach((date) => {
+    const day = new Date(`${date}T00:00:00`).getDay();
     counts[day === 0 ? 6 : day - 1] += 1;
   });
   return counts;
@@ -1029,8 +1038,9 @@ function countRecordsByWeekday(records) {
 
 function countRecordsByMonthSegment(records) {
   const counts = Array(12).fill(0);
-  records.forEach((item) => {
-    const day = new Date(`${item.date}T00:00:00`).getDate();
+  const dates = new Set(records.map((item) => item.date).filter(Boolean));
+  dates.forEach((date) => {
+    const day = new Date(`${date}T00:00:00`).getDate();
     counts[Math.min(11, Math.floor((day - 1) / 3))] += 1;
   });
   return counts;
