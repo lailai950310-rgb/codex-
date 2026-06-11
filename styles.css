@@ -427,14 +427,23 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .form-section h2, .textarea-label { display: block; margin: 0 0 12px; font-size: 15px; font-weight: 900; }
 .form-section h2 small, .textarea-label small { color: var(--muted); font-size: 11px; font-weight: 500; }
 .choice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.type-grid { grid-template-columns: repeat(2, 1fr); }
+.type-grid { grid-template-columns: repeat(3, 1fr); }
 .choice { border: 1px solid transparent; border-radius: 18px; padding: 10px 6px; background: #f7f9f6; }
 .choice.active { border-color: #8dda62; background: #f0fae9; }
 .choice-art { display: grid; width: 55px; height: 55px; margin: 0 auto 6px; place-items: center; border-radius: 17px; font-size: 21px; font-weight: 1000; }
+.choice-art svg { width: 34px; height: 34px; }
+.choice-art svg path, .choice-art svg circle {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .choice b { font-size: 12px; }
 .lime { color: #398700; background: #c9f486; }
 .blue { color: #147cb4; background: #cfeeff; }
 .yellow { color: #9a7000; background: #ffe69a; }
+.coral { color: #e24f67; background: #ffd7dd; }
 .chip-row, .part-chips { display: flex; flex-wrap: wrap; gap: 9px; }
 .chip, .part-chip {
   border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; background: #f6f7f5; font-size: 12px; font-weight: 800;
@@ -467,7 +476,8 @@ textarea {
 .period-tabs button { border: 0; border-radius: 999px; padding: 8px; color: var(--muted); background: transparent; font-size: 12px; font-weight: 800; }
 .period-tabs button.active { color: white; background: var(--green); }
 .overview-card { background: linear-gradient(135deg, #f3faef, #f9fff7); }
-.overview-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+.overview-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+.overview-metrics > div { border-radius: 14px; padding: 10px; background: rgba(255,255,255,.66); }
 .overview-metrics small { display: block; color: var(--muted); font-size: 10px; }
 .overview-metrics strong { display: block; margin-top: 4px; color: var(--green-dark); font-size: 25px; }
 .overview-metrics em { margin-left: 2px; color: var(--ink); font-size: 10px; font-style: normal; }

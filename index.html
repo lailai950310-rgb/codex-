@@ -140,10 +140,30 @@
             <h2>选择运动类型</h2>
             <div class="choice-grid type-grid" id="typeChoices">
               <button class="choice active" type="button" data-value="力量训练">
-                <span class="choice-art lime">力</span><b>力量训练</b>
+                <span class="choice-art lime">
+                  <svg viewBox="0 0 48 48" aria-hidden="true">
+                    <path d="M7 19v10m5-14v18m5-13v8m14-8v8m5-13v18m5-14v10M17 24h14" />
+                  </svg>
+                </span>
+                <b>力量训练</b>
               </button>
               <button class="choice" type="button" data-value="有氧训练">
-                <span class="choice-art blue">氧</span><b>有氧训练</b>
+                <span class="choice-art blue">
+                  <svg viewBox="0 0 48 48" aria-hidden="true">
+                    <path d="M14 11h20M18 12l-3 21m14-13 6 13M13 33h25M17 28h13M12 37h27" />
+                    <circle cx="18" cy="9" r="2" />
+                  </svg>
+                </span>
+                <b>有氧训练</b>
+              </button>
+              <button class="choice" type="button" data-value="体能训练">
+                <span class="choice-art coral">
+                  <svg viewBox="0 0 48 48" aria-hidden="true">
+                    <circle cx="22" cy="8" r="3" />
+                    <path d="M22 12l4 8 7 4m-8-5-6 8-8 2m9-2 3 12m-3-12 9 7 8 1M11 29l3 9H8" />
+                  </svg>
+                </span>
+                <b>体能训练</b>
               </button>
             </div>
           </section>
@@ -217,6 +237,7 @@
             <div><small>运动次数</small><strong id="trendTotal">0<em>次</em></strong></div>
             <div><small>力量训练</small><strong id="trendStrength">0<em>次</em></strong></div>
             <div><small>有氧训练</small><strong id="trendCardio">0<em>次</em></strong></div>
+            <div><small>体能训练</small><strong id="trendConditioning">0<em>次</em></strong></div>
           </div>
         </section>
 

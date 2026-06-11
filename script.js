@@ -155,7 +155,7 @@ function saveQuickWorkout(event) {
   const duration = selection.duration === "custom"
     ? Number(document.querySelector("#customDuration").value)
     : Number(selection.duration);
-  const needsTrainingParts = !isCardioType(selection.type);
+  const needsTrainingParts = isStrengthType(selection.type);
   if (needsTrainingParts && !selection.parts.length) return showToast("请至少选择一个训练部位");
   if (!duration || duration < 5) return showToast("运动时长至少为 5 分钟");
 
@@ -282,6 +282,7 @@ function renderTrends() {
   setText("trendTotal", records.length);
   setText("trendStrength", records.filter((item) => item.type === "力量训练").length);
   setText("trendCardio", records.filter((item) => isCardioType(item.type)).length);
+  setText("trendConditioning", records.filter((item) => isConditioningType(item.type)).length);
   setText("trendMonthCount", recordsForPeriod("month").length);
   const frequencyCounts = countRecordsByMonthSegment(recordsForPeriod("month"));
   const maxFrequency = Math.max(1, ...frequencyCounts);
@@ -474,7 +475,7 @@ function renderWorkoutHistory(period) {
       <h3>训练明细</h3>
       ${records.length
         ? `<div class="history-list">${records.map((item) => {
-            const parts = isCardioType(item.type) ? "" : (item.parts || []).join("、");
+            const parts = isStrengthType(item.type) ? (item.parts || []).join("、") : "";
             return `<article class="history-item">
               <div class="history-date"><b>${formatHistoryDate(item.date)}</b><span>${workoutWeekday(item.date)}</span></div>
               <div>
@@ -490,7 +491,7 @@ function renderWorkoutHistory(period) {
 
 function summarizeWorkoutParts(records) {
   const summary = new Map();
-  records.filter((item) => !isCardioType(item.type)).forEach((item) => {
+  records.filter((item) => isStrengthType(item.type)).forEach((item) => {
     (item.parts || []).forEach((part) => {
       const current = summary.get(part) || { part, count: 0, minutes: 0 };
       current.count += 1;
@@ -684,21 +685,29 @@ function countRecordsByMonthSegment(records) {
 }
 
 function countParts(records) {
-  return records.filter((item) => !isCardioType(item.type)).flatMap((item) => item.parts || []).reduce((acc, part) => {
+  return records.filter((item) => isStrengthType(item.type)).flatMap((item) => item.parts || []).reduce((acc, part) => {
     acc[part] = (acc[part] || 0) + 1;
     return acc;
   }, {});
 }
 
 function updateTrainingPartsVisibility() {
-  const isCardio = isCardioType(selection.type);
-  document.querySelector("#trainingPartsSection").classList.toggle("hidden", isCardio);
-  setText("noteStep", isCardio ? "3." : "4.");
-  if (isCardio) selection.parts = [];
+  const needsTrainingParts = isStrengthType(selection.type);
+  document.querySelector("#trainingPartsSection").classList.toggle("hidden", !needsTrainingParts);
+  setText("noteStep", needsTrainingParts ? "4." : "3.");
+  if (!needsTrainingParts) selection.parts = [];
 }
 
 function isCardioType(type) {
   return type === "有氧训练" || type === "有氧运动";
+}
+
+function isStrengthType(type) {
+  return type === "力量训练";
+}
+
+function isConditioningType(type) {
+  return type === "体能训练";
 }
 
 function workoutTypeLabel(type) {
