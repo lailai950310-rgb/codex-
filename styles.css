@@ -61,15 +61,23 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  margin: -2px -2px 18px;
-  border: 1px solid rgba(164, 211, 155, .48);
-  border-radius: 30px;
-  padding: 20px 16px 16px;
+  width: calc(100% + 32px);
+  margin: -18px -16px 22px;
+  border: 0;
+  border-radius: 0 0 34px 34px;
+  padding: 26px 0 0;
   background:
     radial-gradient(circle at 92% 2%, rgba(255,255,255,.92), transparent 35%),
     radial-gradient(circle at 5% 90%, rgba(178,239,195,.42), transparent 40%),
     linear-gradient(145deg, #f5fff0 0%, #edf9e9 48%, #e8f7e7 100%);
-  box-shadow: 0 12px 32px rgba(62, 119, 69, .08);
+  box-shadow: 0 12px 30px rgba(62, 119, 69, .07);
+}
+@media (max-width: 719px) {
+  .home-hero-shell {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
 }
 .home-hero-shell::before {
   position: absolute;
@@ -84,7 +92,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 }
 .home-hero-shell .topbar {
   min-height: 88px;
-  margin: 0 4px 15px;
+  margin: 0;
+  padding: 0 20px 18px;
 }
 .home-hero-shell .topbar h1 {
   max-width: 280px;
@@ -125,13 +134,15 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .strength-banner {
   position: relative;
   display: block;
-  min-height: 230px;
+  min-height: 268px;
   overflow: hidden;
   touch-action: pan-y;
   padding: 0;
-  border: 2px solid rgba(255,255,255,.92);
+  border: 0;
+  border-top: 1px solid rgba(255,255,255,.76);
+  border-radius: 28px 28px 0 0;
   background: #dcebd8;
-  box-shadow: 0 8px 22px rgba(47, 101, 57, .11);
+  box-shadow: 0 -4px 20px rgba(47, 101, 57, .06);
 }
 .strength-banner::after {
   position: absolute;
@@ -200,8 +211,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 }
 .strength-banner > .banner-dots {
   position: absolute;
-  right: 16px;
-  bottom: 13px;
+  right: 20px;
+  bottom: 16px;
   z-index: 3;
   display: flex;
   width: auto;
