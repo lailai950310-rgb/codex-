@@ -185,12 +185,16 @@ function renderHome() {
   const monthRecords = recordsForPeriod("month");
   const latest = latestBody();
   const previous = state.bodyRecords.at(-2);
+  const latestFat = latestFatRecord();
+  const previousFat = previousFatRecord();
   setText("weekCount", weekRecords.length);
   setText("monthCount", monthRecords.length);
   setText("homeWeight", latest.weight.toFixed(1));
-  setText("homeFat", latest.fat.toFixed(1));
+  setText("homeFat", latestFat ? latestFat.fat.toFixed(1) : "--");
   setText("weightChange", previous ? `较上次 ${signed(latest.weight - previous.weight)} kg` : "等待更多记录");
-  setText("fatChange", previous ? `较上次 ${signed(latest.fat - previous.fat)}%` : "等待更多记录");
+  setText("fatChange", latestFat && previousFat
+    ? `较上次 ${signed(latestFat.fat - previousFat.fat)}%`
+    : "体脂率选填");
 
   const activeDays = new Set(weekRecords.map((item) => new Date(item.date).getDay()));
   document.querySelector("#weekBars").innerHTML = ["一","二","三","四","五","六","日"].map((day, index) => {
@@ -254,7 +258,12 @@ function renderTrends() {
 
 function renderCharts() {
   drawLineChart("weightChart", state.bodyRecords.map((item) => item.weight), "#16a34a", "kg");
-  drawLineChart("fatChart", state.bodyRecords.map((item) => item.fat), "#7c4dff", "%");
+  drawLineChart(
+    "fatChart",
+    state.bodyRecords.map((item) => item.fat).filter(Number.isFinite),
+    "#7c4dff",
+    "%"
+  );
 }
 
 function drawLineChart(id, values, color, unit) {
@@ -268,6 +277,13 @@ function drawLineChart(id, values, color, unit) {
   const ctx = canvas.getContext("2d");
   ctx.scale(ratio, ratio);
   ctx.clearRect(0, 0, width, height);
+  if (!values.length) {
+    ctx.fillStyle = "#879188";
+    ctx.font = "13px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("暂无数据", width / 2, height / 2);
+    return;
+  }
   const pad = { top: 22, right: 14, bottom: 27, left: 34 };
   const min = Math.min(...values) - .8;
   const max = Math.max(...values) + .8;
@@ -310,11 +326,12 @@ function roundRect(ctx, x, y, width, height, radius) {
 
 function renderProfile() {
   const latest = latestBody();
+  const latestFat = latestFatRecord();
   const weekCount = recordsForPeriod("week").length;
   setText("profileName", state.profile.name);
   setText("profileHeight", state.profile.height);
   setText("profileWeight", latest.weight.toFixed(1));
-  setText("profileFat", latest.fat.toFixed(1));
+  setText("profileFat", latestFat ? latestFat.fat.toFixed(1) : "--");
   setText("goalProgressText", weekCount);
   setText("goalTargetText", state.profile.goal);
   setText("goalStatus", `已完成 ${weekCount} 次`);
@@ -333,12 +350,13 @@ function openModal(type) {
   }
   if (type === "body") {
     const latest = latestBody();
+    const latestFat = latestFatRecord();
     title.textContent = "记录身体数据";
     content.innerHTML = `
       <form class="modal-form" id="bodyForm">
         <label>日期<input name="date" type="date" value="${formatDate(new Date())}" required /></label>
         <label>体重 kg<input name="weight" type="number" min="25" max="250" step="0.1" value="${latest.weight}" required /></label>
-        <label>体脂率 %<input name="fat" type="number" min="3" max="70" step="0.1" value="${latest.fat}" required /></label>
+        <label>体脂率 % <small>（选填）</small><input name="fat" type="number" min="3" max="70" step="0.1" value="${latestFat ? latestFat.fat : ""}" placeholder="可不填" /></label>
         <button class="primary-button" type="submit">保存身体数据</button>
       </form>`;
     content.querySelector("form").addEventListener("submit", saveBodyRecord);
@@ -390,7 +408,13 @@ function openReminderModal() {
 function saveBodyRecord(event) {
   event.preventDefault();
   const data = new FormData(event.target);
-  state.bodyRecords.push({ date: data.get("date"), weight: Number(data.get("weight")), fat: Number(data.get("fat")) });
+  const fatValue = data.get("fat").trim();
+  const record = {
+    date: data.get("date"),
+    weight: Number(data.get("weight"))
+  };
+  if (fatValue !== "") record.fat = Number(fatValue);
+  state.bodyRecords.push(record);
   state.bodyRecords.sort((a, b) => a.date.localeCompare(b.date));
   saveState(); render(); closeModal(); showToast("身体数据已保存");
 }
@@ -514,6 +538,18 @@ function countParts(records) {
 
 function latestBody() {
   return state.bodyRecords.at(-1) || { weight: state.profile.weight, fat: state.profile.fat };
+}
+
+function latestFatRecord() {
+  for (let index = state.bodyRecords.length - 1; index >= 0; index -= 1) {
+    if (Number.isFinite(state.bodyRecords[index].fat)) return state.bodyRecords[index];
+  }
+  return Number.isFinite(state.profile.fat) ? { fat: state.profile.fat } : null;
+}
+
+function previousFatRecord() {
+  const records = state.bodyRecords.filter((item) => Number.isFinite(item.fat));
+  return records.at(-2) || null;
 }
 
 function loadState() {
