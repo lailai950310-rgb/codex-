@@ -36,9 +36,6 @@ let activePeriod = "week";
 let toastTimer;
 let deferredInstallPrompt = null;
 
-document.querySelectorAll("[data-tab]").forEach((button) => {
-  button.addEventListener("click", () => switchTab(button.dataset.tab));
-});
 document.body.addEventListener("click", (event) => {
   const go = event.target.closest("[data-go]");
   if (go) switchTab(go.dataset.go);
@@ -110,7 +107,6 @@ function bindSingleChoice(selector, key) {
 
 function switchTab(tab) {
   document.querySelectorAll(".page").forEach((page) => page.classList.toggle("active", page.id === `page-${tab}`));
-  document.querySelectorAll("[data-tab]").forEach((button) => button.classList.toggle("active", button.dataset.tab === tab));
   history.replaceState(null, "", `#${tab}`);
   window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   if (tab === "trends") requestAnimationFrame(renderCharts);

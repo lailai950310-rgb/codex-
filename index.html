@@ -36,49 +36,57 @@
           </div>
         </section>
 
-        <section class="stats-grid" aria-label="本周运动概览">
-          <article class="stat-card">
-            <span>本周运动</span>
-            <strong><b id="weekCount">0</b> / <b id="weekGoal">4</b><small>次</small></strong>
-            <div class="week-bars" id="weekBars"></div>
-          </article>
-          <article class="stat-card">
-            <span>本月运动</span>
-            <strong><b id="monthCount">0</b><small>次</small></strong>
-            <div class="spark-bars" id="monthBars"></div>
-          </article>
-          <article class="stat-card">
-            <span>当前体重</span>
-            <strong><b id="homeWeight">54.2</b><small>kg</small></strong>
-            <p id="weightChange">较上周 -0.6 kg</p>
-            <svg class="mini-area-chart weight-chart-mini" viewBox="0 0 150 34" aria-hidden="true">
-              <defs>
-                <linearGradient id="weightArea" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#34d875" stop-opacity=".62" />
-                  <stop offset="1" stop-color="#bdf6d0" stop-opacity=".12" />
-                </linearGradient>
-              </defs>
-              <path class="area" d="M2 28 C22 20, 38 22, 54 15 S88 17, 106 11 S133 8, 148 12 L148 34 L2 34 Z" />
-              <path class="line" d="M2 28 C22 20, 38 22, 54 15 S88 17, 106 11 S133 8, 148 12" />
-              <circle cx="148" cy="12" r="3.5" />
-            </svg>
-          </article>
-          <article class="stat-card">
-            <span>当前体脂</span>
-            <strong><b id="homeFat">25.8</b><small>%</small></strong>
-            <p id="fatChange">较上周 -0.8%</p>
-            <svg class="mini-area-chart fat-chart-mini" viewBox="0 0 150 34" aria-hidden="true">
-              <defs>
-                <linearGradient id="fatArea" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#32b6f2" stop-opacity=".62" />
-                  <stop offset="1" stop-color="#c9efff" stop-opacity=".12" />
-                </linearGradient>
-              </defs>
-              <path class="area" d="M2 10 C20 7, 38 12, 55 11 S84 16, 102 19 S132 18, 148 25 L148 34 L2 34 Z" />
-              <path class="line" d="M2 10 C20 7, 38 12, 55 11 S84 16, 102 19 S132 18, 148 25" />
-              <circle cx="148" cy="25" r="3.5" />
-            </svg>
-          </article>
+        <section class="home-overview" aria-labelledby="homeOverviewTitle">
+          <div class="section-heading overview-heading">
+            <h2 id="homeOverviewTitle">数据概览</h2>
+            <button class="text-button trend-more" type="button" data-go="trends">
+              查看趋势 <span aria-hidden="true">›</span>
+            </button>
+          </div>
+          <div class="stats-grid">
+            <article class="stat-card">
+              <span>本周运动</span>
+              <strong><b id="weekCount">0</b> / <b id="weekGoal">4</b><small>次</small></strong>
+              <div class="week-bars" id="weekBars"></div>
+            </article>
+            <article class="stat-card">
+              <span>本月运动</span>
+              <strong><b id="monthCount">0</b><small>次</small></strong>
+              <div class="spark-bars" id="monthBars"></div>
+            </article>
+            <article class="stat-card">
+              <span>当前体重</span>
+              <strong><b id="homeWeight">54.2</b><small>kg</small></strong>
+              <p id="weightChange">较上周 -0.6 kg</p>
+              <svg class="mini-area-chart weight-chart-mini" viewBox="0 0 150 34" aria-hidden="true">
+                <defs>
+                  <linearGradient id="weightArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#34d875" stop-opacity=".62" />
+                    <stop offset="1" stop-color="#bdf6d0" stop-opacity=".12" />
+                  </linearGradient>
+                </defs>
+                <path class="area" d="M2 28 C22 20, 38 22, 54 15 S88 17, 106 11 S133 8, 148 12 L148 34 L2 34 Z" />
+                <path class="line" d="M2 28 C22 20, 38 22, 54 15 S88 17, 106 11 S133 8, 148 12" />
+                <circle cx="148" cy="12" r="3.5" />
+              </svg>
+            </article>
+            <article class="stat-card">
+              <span>当前体脂</span>
+              <strong><b id="homeFat">25.8</b><small>%</small></strong>
+              <p id="fatChange">较上周 -0.8%</p>
+              <svg class="mini-area-chart fat-chart-mini" viewBox="0 0 150 34" aria-hidden="true">
+                <defs>
+                  <linearGradient id="fatArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#32b6f2" stop-opacity=".62" />
+                    <stop offset="1" stop-color="#c9efff" stop-opacity=".12" />
+                  </linearGradient>
+                </defs>
+                <path class="area" d="M2 10 C20 7, 38 12, 55 11 S84 16, 102 19 S132 18, 148 25 L148 34 L2 34 Z" />
+                <path class="line" d="M2 10 C20 7, 38 12, 55 11 S84 16, 102 19 S132 18, 148 25" />
+                <circle cx="148" cy="25" r="3.5" />
+              </svg>
+            </article>
+          </div>
         </section>
 
         <section class="content-card">
@@ -113,6 +121,7 @@
             <p>轻松记下每一次努力</p>
             <h1>记录</h1>
           </div>
+          <button class="page-back" type="button" data-go="home">返回首页</button>
         </header>
 
         <form class="record-form" id="quickWorkoutForm">
@@ -182,6 +191,7 @@
             <p>数据可视化，见证进步</p>
             <h1>趋势</h1>
           </div>
+          <button class="page-back" type="button" data-go="home">返回首页</button>
         </header>
 
         <div class="period-tabs" id="periodTabs">
@@ -234,6 +244,7 @@
       <section class="page" id="page-profile" aria-label="我的">
         <header class="page-header">
           <div><p>目标管理，贴心陪伴</p><h1>我的</h1></div>
+          <button class="page-back" type="button" data-go="home">返回首页</button>
         </header>
 
         <section class="profile-card">
@@ -290,23 +301,6 @@
         </section>
       </section>
     </main>
-
-    <nav class="tabbar" aria-label="底部导航">
-      <button type="button" data-tab="records">
-        <span class="nav-icon nav-record" aria-hidden="true"></span>
-        <b>记录</b>
-      </button>
-      <button class="nav-home active" type="button" data-tab="home">
-        <span class="nav-icon" aria-hidden="true">
-          <svg viewBox="0 0 32 32"><path d="M8 15.5 16 9l8 6.5V24a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2Z"/><path d="M13 26v-7h6v7"/></svg>
-        </span>
-        <b>首页</b>
-      </button>
-      <button type="button" data-tab="trends">
-        <span class="nav-icon nav-trend" aria-hidden="true"></span>
-        <b>趋势</b>
-      </button>
-    </nav>
 
     <div class="modal-backdrop" id="modalBackdrop" hidden>
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
