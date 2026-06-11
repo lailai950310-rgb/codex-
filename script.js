@@ -16,7 +16,7 @@ const defaultState = {
   reminder: { enabled: true, time: "19:00" },
   workouts: [
     { id: "demo-1", date: offsetDate(0), type: "力量训练", duration: 45, intensity: "适中", parts: ["背部", "核心"], note: "状态很好，动作控制更稳定了。" },
-    { id: "demo-2", date: offsetDate(-2), type: "有氧运动", duration: 30, intensity: "适中", parts: ["全身"], note: "慢跑 3 公里。" },
+    { id: "demo-2", date: offsetDate(-2), type: "有氧运动", duration: 30, intensity: "适中", parts: [], note: "慢跑 3 公里。" },
     { id: "demo-3", date: offsetDate(-4), type: "力量训练", duration: 60, intensity: "挑战", parts: ["臀部", "腿部"], note: "深蹲完成 4 组。" }
   ],
   bodyRecords: [
@@ -103,6 +103,7 @@ function bindSingleChoice(selector, key) {
       document.querySelectorAll(`${selector} button`).forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
       selection[key] = button.dataset.value;
+      if (key === "type") updateTrainingPartsVisibility();
     });
   });
 }
@@ -120,7 +121,8 @@ function saveQuickWorkout(event) {
   const duration = selection.duration === "custom"
     ? Number(document.querySelector("#customDuration").value)
     : Number(selection.duration);
-  if (!selection.parts.length) return showToast("请至少选择一个训练部位");
+  const needsTrainingParts = selection.type !== "有氧运动";
+  if (needsTrainingParts && !selection.parts.length) return showToast("请至少选择一个训练部位");
   if (!duration || duration < 5) return showToast("运动时长至少为 5 分钟");
 
   state.workouts.unshift({
@@ -129,7 +131,7 @@ function saveQuickWorkout(event) {
     type: selection.type,
     duration,
     intensity: selection.intensity,
-    parts: [...selection.parts],
+    parts: needsTrainingParts ? [...selection.parts] : [],
     note: document.querySelector("#recordNote").value.trim()
   });
   document.querySelector("#recordNote").value = "";
@@ -155,6 +157,7 @@ function render() {
 }
 
 function renderParts() {
+  updateTrainingPartsVisibility();
   const partChoices = document.querySelector("#partChoices");
   partChoices.innerHTML = bodyParts.map((part) =>
     `<button class="part-chip ${selection.parts.includes(part) ? "active" : ""}" type="button" data-part="${part}">${part}</button>`
@@ -227,7 +230,11 @@ function renderRecords() {
       <span class="record-item-icon">${item.type.slice(0, 1)}</span>
       <div>
         <h3>${escapeHtml(item.type)} · ${item.duration} 分钟</h3>
-        <p>${item.date} · ${escapeHtml(item.parts.join("、"))} · ${escapeHtml(item.intensity)}</p>
+        <p>${[
+          item.date,
+          item.type === "有氧运动" ? "" : escapeHtml((item.parts || []).join("、")),
+          escapeHtml(item.intensity)
+        ].filter(Boolean).join(" · ")}</p>
       </div>
       <button class="delete-record" type="button" data-delete-record="${item.id}" aria-label="删除记录">×</button>
     </article>
@@ -554,10 +561,17 @@ function countRecordsByWeekday(records) {
 }
 
 function countParts(records) {
-  return records.flatMap((item) => item.parts || []).reduce((acc, part) => {
+  return records.filter((item) => item.type !== "有氧运动").flatMap((item) => item.parts || []).reduce((acc, part) => {
     acc[part] = (acc[part] || 0) + 1;
     return acc;
   }, {});
+}
+
+function updateTrainingPartsVisibility() {
+  const isCardio = selection.type === "有氧运动";
+  document.querySelector("#trainingPartsSection").classList.toggle("hidden", isCardio);
+  setText("noteStep", isCardio ? "3." : "4.");
+  if (isCardio) selection.parts = [];
 }
 
 function latestBody() {
