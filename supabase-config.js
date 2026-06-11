@@ -1,4 +1,4 @@
 window.APP_CONFIG = {
-  supabaseUrl: "YOUR_SUPABASE_PROJECT_URL",
-  supabasePublishableKey: "YOUR_SUPABASE_PUBLISHABLE_KEY"
+  supabaseUrl: "https://zdrdixwgcmrkrubroipv.supabase.co",
+  supabasePublishableKey: "sb_publishable_inSH0QriZUAklpw0XYNzxw_is0co7ub"
 };
