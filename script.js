@@ -188,6 +188,7 @@ function renderHome() {
   const latestFat = latestFatRecord();
   const previousFat = previousFatRecord();
   setText("weekCount", weekRecords.length);
+  setText("bannerWeekCount", weekRecords.length);
   setText("monthCount", monthRecords.length);
   setText("homeWeight", latest.weight.toFixed(1));
   setText("homeFat", latestFat ? latestFat.fat.toFixed(1) : "--");
@@ -522,10 +523,15 @@ function registerServiceWorker() {
 }
 
 function recordsForPeriod(period) {
-  const days = period === "week" ? 7 : period === "month" ? 30 : 90;
   const boundary = new Date();
   boundary.setHours(0, 0, 0, 0);
-  boundary.setDate(boundary.getDate() - days + 1);
+  if (period === "week") {
+    const day = boundary.getDay();
+    boundary.setDate(boundary.getDate() - (day === 0 ? 6 : day - 1));
+  } else {
+    const days = period === "month" ? 30 : 90;
+    boundary.setDate(boundary.getDate() - days + 1);
+  }
   return state.workouts.filter((item) => new Date(`${item.date}T00:00:00`) >= boundary);
 }
 
