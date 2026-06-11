@@ -27,6 +27,11 @@ let deferredInstallPrompt = null;
 let bannerIndex = 0;
 let bannerTimer;
 let bannerPointerStart = null;
+let supabaseClient = null;
+let currentUser = null;
+let guestState = structuredClone(state);
+let authMode = "login";
+let cloudBusy = false;
 
 document.body.addEventListener("click", (event) => {
   const go = event.target.closest("[data-go]");
@@ -73,6 +78,8 @@ document.querySelector("#importButton").addEventListener("click", () => {
 });
 document.querySelector("#importFile").addEventListener("change", importData);
 document.querySelector("#installButton").addEventListener("click", installApp);
+document.querySelector("#accountAction").addEventListener("click", handleAccountAction);
+document.querySelector("#migrateButton").addEventListener("click", migrateLocalData);
 
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
@@ -150,7 +157,7 @@ function restartBannerTimer() {
   bannerTimer = setInterval(() => showBanner(bannerIndex + 1), 4800);
 }
 
-function saveQuickWorkout(event) {
+async function saveQuickWorkout(event) {
   event.preventDefault();
   const duration = selection.duration === "custom"
     ? Number(document.querySelector("#customDuration").value)
@@ -159,15 +166,17 @@ function saveQuickWorkout(event) {
   if (needsTrainingParts && !selection.parts.length) return showToast("请至少选择一个训练部位");
   if (!duration || duration < 5) return showToast("运动时长至少为 5 分钟");
 
-  state.workouts.unshift({
-    id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}`,
+  const record = {
+    id: createUuid(),
     date: formatDate(new Date()),
     type: selection.type,
     duration,
     intensity: selection.intensity,
     parts: needsTrainingParts ? [...selection.parts] : [],
     note: document.querySelector("#recordNote").value.trim()
-  });
+  };
+  if (currentUser && !(await insertCloudWorkout(record))) return;
+  state.workouts.unshift(record);
   document.querySelector("#recordNote").value = "";
   document.querySelector("#noteCount").textContent = "0";
   saveState();
@@ -175,7 +184,11 @@ function saveQuickWorkout(event) {
   showToast("运动记录已保存");
 }
 
-function deleteRecord(id) {
+async function deleteRecord(id) {
+  if (currentUser) {
+    const { error } = await supabaseClient.from("workout_records").delete().eq("id", id);
+    if (error) return showToast(`删除失败：${friendlyCloudError(error)}`);
+  }
   state.workouts = state.workouts.filter((item) => item.id !== id);
   saveState();
   render();
@@ -188,6 +201,7 @@ function render() {
   renderRecords();
   renderTrends();
   renderProfile();
+  renderAccount();
 }
 
 function renderParts() {
@@ -393,10 +407,31 @@ function renderProfile() {
   setText("reminderStatus", state.reminder.enabled ? `每天 ${state.reminder.time}` : "已关闭");
 }
 
+function renderAccount() {
+  const guestNotice = document.querySelector("#guestNotice");
+  const accountAction = document.querySelector("#accountAction");
+  const migrationCard = document.querySelector("#migrationCard");
+  guestNotice.hidden = Boolean(currentUser);
+  setText("accountStatusLabel", currentUser ? "云端账号" : "游客模式");
+  setText("accountStatusText", currentUser ? "数据已绑定当前登录账号" : "登录后可跨设备保存记录");
+  setText("accountEmail", currentUser?.email || "本地数据可能因清理浏览器而丢失");
+  accountAction.textContent = currentUser ? "退出" : "登录";
+
+  const localWorkoutCount = guestState?.workouts?.length || 0;
+  const localBodyCount = guestState?.bodyRecords?.length || 0;
+  const canMigrate = Boolean(currentUser && (localWorkoutCount || localBodyCount));
+  migrationCard.hidden = !canMigrate;
+  if (canMigrate) {
+    setText("migrationSummary", `${localWorkoutCount} 条运动记录，${localBodyCount} 条身体记录`);
+  }
+}
+
 function openModal(type) {
   const title = document.querySelector("#modalTitle");
   const content = document.querySelector("#modalContent");
-  if (type === "workout") {
+  if (type === "auth") {
+    renderAuthModal();
+  } else if (type === "workout") {
     closeModal();
     switchTab("records");
     document.querySelector("#page-records").scrollIntoView({ behavior: "smooth" });
@@ -442,7 +477,7 @@ function openModal(type) {
   } else {
     title.textContent = type === "privacy" ? "隐私说明" : "关于元气练习生";
     content.innerHTML = `<p class="info-copy">${type === "privacy"
-      ? "你的运动和身体数据仅保存在当前浏览器的本地存储中，不会上传到服务器。你可以随时通过“数据导出”备份，也可以清除浏览器数据完成删除。"
+      ? "游客模式下，数据仅保存在当前浏览器中。登录后，运动和身体记录会通过 Supabase 加密连接保存到云端，并由访问策略限制为仅当前账号可读写。你仍可随时通过“数据导出”保存个人备份。"
       : "元气练习生是一款轻量健身记录原型，帮助你记录训练、观察趋势，并用更温和的方式坚持运动。"}</p>`;
   }
   document.querySelector("#modalBackdrop").hidden = false;
@@ -536,15 +571,18 @@ function openReminderModal() {
   document.body.style.overflow = "hidden";
 }
 
-function saveBodyRecord(event) {
+async function saveBodyRecord(event) {
   event.preventDefault();
   const data = new FormData(event.target);
   const fatValue = data.get("fat").trim();
   const record = {
+    id: createUuid(),
     date: data.get("date"),
     weight: Number(data.get("weight"))
   };
   if (fatValue !== "") record.fat = Number(fatValue);
+  if (currentUser && !(await upsertCloudBodyRecord(record))) return;
+  state.bodyRecords = state.bodyRecords.filter((item) => item.date !== record.date);
   state.bodyRecords.push(record);
   state.bodyRecords.sort((a, b) => a.date.localeCompare(b.date));
   saveState(); render(); closeModal(); showToast("身体数据已保存");
@@ -557,6 +595,281 @@ function saveProfile(event) {
   state.profile.height = Number(data.get("height"));
   state.profile.goal = Number(data.get("goal"));
   saveState(); render(); closeModal(); showToast("个人信息已更新");
+}
+
+function renderAuthModal() {
+  const title = document.querySelector("#modalTitle");
+  const content = document.querySelector("#modalContent");
+  const isLogin = authMode === "login";
+  title.textContent = isLogin ? "登录云端账号" : "注册云端账号";
+  content.innerHTML = `
+    <form class="modal-form" id="authForm">
+      <label>邮箱
+        <input name="email" type="email" autocomplete="email" placeholder="name@example.com" required />
+      </label>
+      <label>密码
+        <input name="password" type="password" minlength="6" autocomplete="${isLogin ? "current-password" : "new-password"}" placeholder="至少 6 位" required />
+      </label>
+      <button class="primary-button" type="submit">${isLogin ? "登录" : "创建账号"}</button>
+    </form>
+    <div class="auth-switch">
+      <button type="button" id="authModeSwitch">${isLogin ? "没有账号？立即注册" : "已有账号？返回登录"}</button>
+    </div>
+    <p class="auth-help">登录后，运动和身体记录将保存到 Supabase 云端，并与当前账号绑定。</p>`;
+  content.querySelector("#authForm").addEventListener("submit", submitAuthForm);
+  content.querySelector("#authModeSwitch").addEventListener("click", () => {
+    authMode = isLogin ? "signup" : "login";
+    renderAuthModal();
+  });
+}
+
+async function submitAuthForm(event) {
+  event.preventDefault();
+  if (!supabaseClient) {
+    showToast("请先配置 Supabase 项目地址和 Publishable Key");
+    return;
+  }
+  const form = event.currentTarget;
+  const data = new FormData(form);
+  const email = data.get("email").trim();
+  const password = data.get("password");
+  setCloudBusy(true);
+
+  const result = authMode === "login"
+    ? await supabaseClient.auth.signInWithPassword({ email, password })
+    : await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${location.origin}${location.pathname}` }
+      });
+  setCloudBusy(false);
+
+  if (result.error) {
+    showToast(friendlyCloudError(result.error));
+    return;
+  }
+  if (authMode === "signup" && !result.data.session) {
+    showToast("注册成功，请前往邮箱完成验证");
+    authMode = "login";
+    renderAuthModal();
+    return;
+  }
+  closeModal();
+  showToast("登录成功，正在加载云端数据");
+}
+
+async function handleAccountAction() {
+  if (!currentUser) {
+    authMode = "login";
+    openModal("auth");
+    return;
+  }
+  setCloudBusy(true);
+  const { error } = await supabaseClient.auth.signOut();
+  setCloudBusy(false);
+  if (error) showToast(friendlyCloudError(error));
+}
+
+async function initializeSupabase() {
+  const config = window.APP_CONFIG || {};
+  const configured = config.supabaseUrl
+    && config.supabasePublishableKey
+    && !config.supabaseUrl.startsWith("YOUR_")
+    && !config.supabasePublishableKey.startsWith("YOUR_");
+  if (!configured || !window.supabase?.createClient) {
+    renderAccount();
+    return;
+  }
+
+  supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  });
+
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    window.setTimeout(() => applyAuthSession(session, event), 0);
+  });
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error) {
+    showToast(friendlyCloudError(error));
+    return;
+  }
+  await applyAuthSession(data.session, "INITIAL_SESSION");
+}
+
+async function applyAuthSession(session, event) {
+  const nextUser = session?.user || null;
+  if (nextUser?.id === currentUser?.id && event !== "INITIAL_SESSION") return;
+  currentUser = nextUser;
+  if (currentUser) {
+    await loadCloudData();
+  } else {
+    state = structuredClone(guestState || defaultState);
+    render();
+    if (event === "SIGNED_OUT") showToast("已退出，当前显示本机游客数据");
+  }
+}
+
+async function loadCloudData() {
+  if (!supabaseClient || !currentUser) return;
+  setCloudBusy(true);
+  const [workoutsResult, bodyResult] = await Promise.all([
+    supabaseClient
+      .from("workout_records")
+      .select("id,workout_date,workout_type,duration_minutes,intensity,body_parts,note")
+      .order("workout_date", { ascending: false })
+      .order("created_at", { ascending: false }),
+    supabaseClient
+      .from("body_records")
+      .select("id,record_date,weight_kg,body_fat_percent")
+      .order("record_date", { ascending: true })
+  ]);
+  setCloudBusy(false);
+
+  const error = workoutsResult.error || bodyResult.error;
+  if (error) {
+    showToast(`云端数据加载失败：${friendlyCloudError(error)}`);
+    renderAccount();
+    return;
+  }
+
+  state = {
+    ...structuredClone(defaultState),
+    profile: structuredClone(guestState?.profile || defaultState.profile),
+    reminder: structuredClone(guestState?.reminder || defaultState.reminder),
+    workouts: workoutsResult.data.map(fromCloudWorkout),
+    bodyRecords: bodyResult.data.map(fromCloudBodyRecord)
+  };
+  render();
+}
+
+async function insertCloudWorkout(record) {
+  const { error } = await supabaseClient.from("workout_records").insert(toCloudWorkout(record));
+  if (error) {
+    showToast(`保存失败：${friendlyCloudError(error)}`);
+    return false;
+  }
+  return true;
+}
+
+async function upsertCloudBodyRecord(record) {
+  const payload = toCloudBodyRecord(record);
+  const { error } = await supabaseClient
+    .from("body_records")
+    .upsert(payload, { onConflict: "user_id,record_date" });
+  if (error) {
+    showToast(`保存失败：${friendlyCloudError(error)}`);
+    return false;
+  }
+  return true;
+}
+
+async function migrateLocalData() {
+  if (!currentUser || !guestState) return;
+  const workouts = guestState.workouts.map((record) => toCloudWorkout({
+    ...record,
+    id: validUuid(record.id) ? record.id : createUuid()
+  }));
+  const bodyRecords = guestState.bodyRecords.map((record) => toCloudBodyRecord({
+    ...record,
+    id: validUuid(record.id) ? record.id : createUuid()
+  }));
+  if (!workouts.length && !bodyRecords.length) return;
+  if (!confirm(`将 ${workouts.length} 条运动记录和 ${bodyRecords.length} 条身体记录迁移到 ${currentUser.email}？`)) return;
+
+  setCloudBusy(true);
+  const results = await Promise.all([
+    workouts.length
+      ? supabaseClient.from("workout_records").upsert(workouts, { onConflict: "id" })
+      : Promise.resolve({ error: null }),
+    bodyRecords.length
+      ? supabaseClient.from("body_records").upsert(bodyRecords, { onConflict: "user_id,record_date" })
+      : Promise.resolve({ error: null })
+  ]);
+  setCloudBusy(false);
+  const error = results.find((result) => result.error)?.error;
+  if (error) {
+    showToast(`迁移失败：${friendlyCloudError(error)}`);
+    return;
+  }
+
+  guestState = structuredClone(defaultState);
+  localStorage.removeItem(STORAGE_KEY);
+  await loadCloudData();
+  showToast("本地数据已迁移到云端");
+}
+
+function toCloudWorkout(record) {
+  return {
+    id: record.id,
+    user_id: currentUser.id,
+    workout_date: record.date,
+    workout_type: workoutTypeLabel(record.type),
+    duration_minutes: Number(record.duration),
+    intensity: record.intensity,
+    body_parts: isStrengthType(record.type) ? (record.parts || []) : [],
+    note: record.note || ""
+  };
+}
+
+function fromCloudWorkout(record) {
+  return {
+    id: record.id,
+    date: record.workout_date,
+    type: record.workout_type,
+    duration: Number(record.duration_minutes),
+    intensity: record.intensity,
+    parts: record.body_parts || [],
+    note: record.note || ""
+  };
+}
+
+function toCloudBodyRecord(record) {
+  return {
+    id: record.id,
+    user_id: currentUser.id,
+    record_date: record.date,
+    weight_kg: Number(record.weight),
+    body_fat_percent: Number.isFinite(record.fat) ? Number(record.fat) : null
+  };
+}
+
+function fromCloudBodyRecord(record) {
+  const result = {
+    id: record.id,
+    date: record.record_date,
+    weight: Number(record.weight_kg)
+  };
+  if (record.body_fat_percent !== null) result.fat = Number(record.body_fat_percent);
+  return result;
+}
+
+function setCloudBusy(busy) {
+  cloudBusy = busy;
+  document.body.classList.toggle("cloud-loading", busy);
+}
+
+function friendlyCloudError(error) {
+  const message = error?.message || "云端服务暂时不可用";
+  if (/invalid login credentials/i.test(message)) return "邮箱或密码不正确";
+  if (/email not confirmed/i.test(message)) return "请先前往邮箱完成验证";
+  if (/user already registered/i.test(message)) return "该邮箱已经注册";
+  if (/failed to fetch|network/i.test(message)) return "网络连接失败，请稍后重试";
+  return message;
+}
+
+function validUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value || "");
+}
+
+function createUuid() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (char) =>
+    (Number(char) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> Number(char) / 4).toString(16)
+  );
 }
 
 function closeModal() {
@@ -579,6 +892,10 @@ async function importData(event) {
   const file = event.target.files?.[0];
   event.target.value = "";
   if (!file) return;
+  if (currentUser) {
+    showToast("请先退出账号，在游客模式导入后再迁移到云端");
+    return;
+  }
 
   try {
     const imported = JSON.parse(await file.text());
@@ -743,7 +1060,10 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (!currentUser) {
+    guestState = structuredClone(state);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
 }
 
 function showToast(message) {
@@ -789,3 +1109,4 @@ const initialTab = ["home", "records", "trends", "profile"].includes(location.ha
 switchTab(initialTab);
 requestPersistentStorage();
 registerServiceWorker();
+initializeSupabase();

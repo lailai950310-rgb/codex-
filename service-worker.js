@@ -1,9 +1,10 @@
-const CACHE_NAME = "vitality-fitness-v17";
+const CACHE_NAME = "vitality-fitness-v18";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=16",
-  "./script.js?v=16",
+  "./styles.css?v=18",
+  "./supabase-config.js?v=18",
+  "./script.js?v=18",
   "./manifest.webmanifest",
   "./assets/profile-avatar-girl.png",
   "./assets/banner-dumbbell.jpg",
@@ -37,6 +38,7 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const requestUrl = new URL(event.request.url);
+  if (requestUrl.hostname.endsWith(".supabase.co")) return;
   const sameOrigin = requestUrl.origin === self.location.origin;
   const shouldPreferNetwork = sameOrigin && (
     event.request.mode === "navigate"
