@@ -27,12 +27,23 @@
           </button>
         </header>
 
-        <section class="hero-card strength-banner">
-          <img src="assets/female-strength-banner.png" alt="正在进行哑铃训练的女性" />
+        <section class="hero-card strength-banner" id="strengthCarousel" aria-roledescription="轮播图" aria-label="女性健身力量">
+          <div class="banner-slides">
+            <img class="banner-slide active" src="assets/banner-dumbbell.jpg" alt="女性正在进行哑铃力量训练" />
+            <img class="banner-slide" src="assets/banner-kettlebell.jpg" alt="女性正在进行壶铃深蹲训练" />
+            <img class="banner-slide" src="assets/banner-press.jpg" alt="女性正在进行哑铃肩推训练" />
+            <img class="banner-slide" src="assets/banner-boxing.jpg" alt="女性正在进行拳击体能训练" />
+          </div>
           <div class="strength-banner-copy">
             <span class="soft-label">本周运动 <b id="bannerWeekCount">0</b> 次</span>
             <strong>真实的力量，<br />来自每一次坚持。</strong>
             <p>今天，也比昨天更强一点。</p>
+          </div>
+          <div class="banner-dots" role="group" aria-label="选择轮播图">
+            <button class="active" type="button" data-banner-index="0" aria-label="第 1 张" aria-current="true"></button>
+            <button type="button" data-banner-index="1" aria-label="第 2 张"></button>
+            <button type="button" data-banner-index="2" aria-label="第 3 张"></button>
+            <button type="button" data-banner-index="3" aria-label="第 4 张"></button>
           </div>
         </section>
 

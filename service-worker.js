@@ -1,4 +1,4 @@
-const CACHE_NAME = "vitality-fitness-v7";
+const CACHE_NAME = "vitality-fitness-v8";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,7 +6,10 @@ const APP_SHELL = [
   "./script.js",
   "./manifest.webmanifest",
   "./assets/profile-avatar-girl.png",
-  "./assets/female-strength-banner.png",
+  "./assets/banner-dumbbell.jpg",
+  "./assets/banner-kettlebell.jpg",
+  "./assets/banner-press.jpg",
+  "./assets/banner-boxing.jpg",
   "./assets/fitness-ip-quote.png",
   "./assets/profile-yellow-ip.png"
 ];

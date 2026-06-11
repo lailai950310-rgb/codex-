@@ -83,6 +83,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   display: block;
   min-height: 230px;
   overflow: hidden;
+  touch-action: pan-y;
   padding: 0;
   border: 3px solid rgba(255,255,255,.9);
   background: #243127;
@@ -97,7 +98,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
     linear-gradient(0deg, rgba(10,18,13,.3), transparent 48%);
   content: "";
 }
-.strength-banner > img {
+.strength-banner > .banner-slides {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+}
+.strength-banner .banner-slide {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -105,6 +112,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   max-height: none;
   object-fit: cover;
   object-position: 61% center;
+  opacity: 0;
+  transform: scale(1.025);
+  transition: opacity .55s ease, transform 4.8s ease;
+}
+.strength-banner .banner-slide.active {
+  opacity: 1;
+  transform: scale(1);
 }
 .strength-banner .strength-banner-copy {
   position: absolute;
@@ -139,6 +153,32 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   font-size: 12px;
   font-weight: 600;
   line-height: 1.5;
+}
+.strength-banner > .banner-dots {
+  position: absolute;
+  right: 16px;
+  bottom: 13px;
+  z-index: 3;
+  display: flex;
+  width: auto;
+  gap: 6px;
+}
+.banner-dots button {
+  width: 6px;
+  height: 6px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: rgba(255,255,255,.52);
+  box-shadow: 0 1px 4px rgba(0,0,0,.28);
+  transition: width .2s ease, background .2s ease;
+}
+.banner-dots button.active {
+  width: 18px;
+  background: #d6ff91;
+}
+@media (prefers-reduced-motion: reduce) {
+  .strength-banner .banner-slide { transition: none; }
 }
 .soft-label {
   display: inline-flex; border-radius: 999px; padding: 6px 11px;

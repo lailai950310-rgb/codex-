@@ -35,6 +35,9 @@ let selection = { type: "力量训练", duration: 30, intensity: "适中", parts
 let activePeriod = "week";
 let toastTimer;
 let deferredInstallPrompt = null;
+let bannerIndex = 0;
+let bannerTimer;
+let bannerPointerStart = null;
 
 document.body.addEventListener("click", (event) => {
   const go = event.target.closest("[data-go]");
@@ -110,6 +113,52 @@ function switchTab(tab) {
   history.replaceState(null, "", `#${tab}`);
   window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   if (tab === "trends") requestAnimationFrame(renderCharts);
+}
+
+function initBannerCarousel() {
+  const carousel = document.querySelector("#strengthCarousel");
+  if (!carousel) return;
+  const dots = carousel.querySelectorAll("[data-banner-index]");
+  dots.forEach((dot) => {
+    dot.addEventListener("click", () => {
+      showBanner(Number(dot.dataset.bannerIndex));
+      restartBannerTimer();
+    });
+  });
+  carousel.addEventListener("pointerdown", (event) => {
+    bannerPointerStart = event.clientX;
+  });
+  carousel.addEventListener("pointerup", (event) => {
+    if (bannerPointerStart === null) return;
+    const distance = event.clientX - bannerPointerStart;
+    bannerPointerStart = null;
+    if (Math.abs(distance) < 35) return;
+    showBanner(bannerIndex + (distance < 0 ? 1 : -1));
+    restartBannerTimer();
+  });
+  carousel.addEventListener("pointercancel", () => {
+    bannerPointerStart = null;
+  });
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) restartBannerTimer();
+}
+
+function showBanner(index) {
+  const carousel = document.querySelector("#strengthCarousel");
+  const slides = carousel?.querySelectorAll(".banner-slide");
+  const dots = carousel?.querySelectorAll("[data-banner-index]");
+  if (!slides?.length) return;
+  bannerIndex = (index + slides.length) % slides.length;
+  slides.forEach((slide, slideIndex) => slide.classList.toggle("active", slideIndex === bannerIndex));
+  dots.forEach((dot, dotIndex) => {
+    const active = dotIndex === bannerIndex;
+    dot.classList.toggle("active", active);
+    dot.toggleAttribute("aria-current", active);
+  });
+}
+
+function restartBannerTimer() {
+  clearInterval(bannerTimer);
+  bannerTimer = setInterval(() => showBanner(bannerIndex + 1), 4800);
 }
 
 function saveQuickWorkout(event) {
@@ -645,6 +694,7 @@ window.addEventListener("resize", () => {
 });
 
 render();
+initBannerCarousel();
 const initialTab = ["home", "records", "trends", "profile"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "home";
 switchTab(initialTab);
 requestPersistentStorage();
