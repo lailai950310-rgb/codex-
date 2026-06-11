@@ -324,7 +324,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   object-fit: cover;
   object-position: center;
   mix-blend-mode: multiply;
-  filter: drop-shadow(0 8px 7px rgba(43, 110, 52, .12));
+  filter: none;
 }
 .weight-reading {
   display: flex;
