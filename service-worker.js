@@ -1,4 +1,4 @@
-const CACHE_NAME = "vitality-fitness-v13";
+const CACHE_NAME = "vitality-fitness-v14";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -10,6 +10,10 @@ const APP_SHELL = [
   "./assets/banner-kettlebell.jpg",
   "./assets/banner-press.jpg",
   "./assets/banner-boxing.jpg",
+  "./assets/intensity-easy.jpg",
+  "./assets/intensity-good.jpg",
+  "./assets/intensity-tired.jpg",
+  "./assets/intensity-exhausted.jpg",
   "./assets/fitness-ip-quote.png",
   "./assets/profile-yellow-ip.png"
 ];
