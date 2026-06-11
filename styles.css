@@ -17,10 +17,16 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { scroll-behavior: smooth; }
+html {
+  margin: 0;
+  padding: 0;
+  background: #173623;
+  scroll-behavior: smooth;
+}
 body {
   min-height: 100dvh;
   margin: 0;
+  padding: 0;
   background:
     radial-gradient(circle at 0 0, rgba(98, 211, 232, 0.13), transparent 24rem),
     radial-gradient(circle at 100% 10%, rgba(255, 205, 140, 0.12), transparent 20rem),
@@ -41,6 +47,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .app { width: min(100%, 460px); margin: 0 auto; }
 .page { display: none; padding: 18px 16px 32px; animation: page-in .26s ease; }
 .page.active { display: block; }
+#page-home {
+  margin-top: 0;
+  padding-top: 0;
+}
 @keyframes page-in { from { opacity: 0; transform: translateY(5px); } }
 
 .topbar, .page-header {
@@ -62,10 +72,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   isolation: isolate;
   overflow: hidden;
   width: calc(100% + 32px);
-  margin: -18px -16px 22px;
+  margin: 0 -16px 22px;
   border: 0;
   border-radius: 0 0 34px 34px;
-  min-height: 480px;
+  min-height: calc(480px + env(safe-area-inset-top, 0px));
   padding: 0;
   background: #173623;
   box-shadow: none;
@@ -80,7 +90,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .home-hero-shell::before {
   display: none;
 }
-.home-hero-shell .topbar {
+.home-hero-shell .hero-content {
   position: absolute;
   top: 0;
   right: 0;
@@ -88,7 +98,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   z-index: 4;
   min-height: 0;
   margin: 0;
-  padding: 38px 20px 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 24px) 20px 0;
 }
 .home-hero-shell .topbar h1 {
   max-width: 270px;
@@ -137,7 +147,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .strength-banner {
   position: relative;
   display: block;
-  min-height: 480px;
+  min-height: calc(480px + env(safe-area-inset-top, 0px));
   overflow: hidden;
   touch-action: pan-y;
   padding: 0;
@@ -852,7 +862,6 @@ canvas { display: block; width: 100%; margin-top: 10px; }
 .toast.show { opacity: 1; transform: translateY(0); }
 
 @media (min-width: 720px) {
-  body { padding-top: 26px; }
   .app { border-radius: 34px 34px 0 0; box-shadow: 0 0 0 1px rgba(220,230,219,.7), 0 28px 80px rgba(34,77,44,.12); }
 }
 @media (prefers-reduced-motion: reduce) {
