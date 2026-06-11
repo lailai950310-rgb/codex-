@@ -16,7 +16,7 @@ const defaultState = {
   reminder: { enabled: true, time: "19:00" },
   workouts: [
     { id: "demo-1", date: offsetDate(0), type: "力量训练", duration: 45, intensity: "适中", parts: ["背部", "核心"], note: "状态很好，动作控制更稳定了。" },
-    { id: "demo-2", date: offsetDate(-2), type: "有氧运动", duration: 30, intensity: "适中", parts: [], note: "慢跑 3 公里。" },
+    { id: "demo-2", date: offsetDate(-2), type: "有氧训练", duration: 30, intensity: "适中", parts: [], note: "慢跑 3 公里。" },
     { id: "demo-3", date: offsetDate(-4), type: "力量训练", duration: 60, intensity: "挑战", parts: ["臀部", "腿部"], note: "深蹲完成 4 组。" }
   ],
   bodyRecords: [
@@ -121,7 +121,7 @@ function saveQuickWorkout(event) {
   const duration = selection.duration === "custom"
     ? Number(document.querySelector("#customDuration").value)
     : Number(selection.duration);
-  const needsTrainingParts = selection.type !== "有氧运动";
+  const needsTrainingParts = !isCardioType(selection.type);
   if (needsTrainingParts && !selection.parts.length) return showToast("请至少选择一个训练部位");
   if (!duration || duration < 5) return showToast("运动时长至少为 5 分钟");
 
@@ -229,10 +229,10 @@ function renderRecords() {
     <article class="record-item">
       <span class="record-item-icon">${item.type.slice(0, 1)}</span>
       <div>
-        <h3>${escapeHtml(item.type)} · ${item.duration} 分钟</h3>
+        <h3>${escapeHtml(workoutTypeLabel(item.type))} · ${item.duration} 分钟</h3>
         <p>${[
           item.date,
-          item.type === "有氧运动" ? "" : escapeHtml((item.parts || []).join("、")),
+          isCardioType(item.type) ? "" : escapeHtml((item.parts || []).join("、")),
           escapeHtml(item.intensity)
         ].filter(Boolean).join(" · ")}</p>
       </div>
@@ -245,7 +245,7 @@ function renderTrends() {
   const records = recordsForPeriod(activePeriod);
   setText("trendTotal", records.length);
   setText("trendStrength", records.filter((item) => item.type === "力量训练").length);
-  setText("trendCardio", records.filter((item) => item.type === "有氧运动").length);
+  setText("trendCardio", records.filter((item) => isCardioType(item.type)).length);
   setText("trendMonthCount", recordsForPeriod("month").length);
   const heights = [18, 42, 25, 20, 32, 28, 48, 29, 55, 39, 31, 61];
   document.querySelector("#frequencyBars").innerHTML = heights.map((height) =>
@@ -561,17 +561,25 @@ function countRecordsByWeekday(records) {
 }
 
 function countParts(records) {
-  return records.filter((item) => item.type !== "有氧运动").flatMap((item) => item.parts || []).reduce((acc, part) => {
+  return records.filter((item) => !isCardioType(item.type)).flatMap((item) => item.parts || []).reduce((acc, part) => {
     acc[part] = (acc[part] || 0) + 1;
     return acc;
   }, {});
 }
 
 function updateTrainingPartsVisibility() {
-  const isCardio = selection.type === "有氧运动";
+  const isCardio = isCardioType(selection.type);
   document.querySelector("#trainingPartsSection").classList.toggle("hidden", isCardio);
   setText("noteStep", isCardio ? "3." : "4.");
   if (isCardio) selection.parts = [];
+}
+
+function isCardioType(type) {
+  return type === "有氧训练" || type === "有氧运动";
+}
+
+function workoutTypeLabel(type) {
+  return isCardioType(type) ? "有氧训练" : type;
 }
 
 function latestBody() {

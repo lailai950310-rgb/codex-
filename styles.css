@@ -375,6 +375,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .form-section h2, .textarea-label { display: block; margin: 0 0 12px; font-size: 15px; font-weight: 900; }
 .form-section h2 small, .textarea-label small { color: var(--muted); font-size: 11px; font-weight: 500; }
 .choice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.type-grid { grid-template-columns: repeat(2, 1fr); }
 .choice { border: 1px solid transparent; border-radius: 18px; padding: 10px 6px; background: #f7f9f6; }
 .choice.active { border-color: #8dda62; background: #f0fae9; }
 .choice-art { display: grid; width: 55px; height: 55px; margin: 0 auto 6px; place-items: center; border-radius: 17px; font-size: 21px; font-weight: 1000; }
