@@ -3,13 +3,13 @@ const LEGACY_STORAGE_KEYS = ["vitality-fitness-v2"];
 const bodyParts = ["背部", "臀部", "肩部", "手臂", "胸部", "核心", "腿部", "全身"];
 const partColors = ["#20bd55", "#44bde9", "#ffc92f", "#8c63ef", "#ff8da1", "#54c7b0", "#ff9e45", "#8da0b5"];
 const homePartIcons = {
-  "背部": `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="7" r="3.5"/><path d="M18 13c2-1 4-2 6-2s4 1 6 2"/><path class="focus" d="M18 14c-2 2-5 3-8 5l3 7 5-3 1 15h10l1-15 5 3 3-7c-3-2-6-3-8-5-1 5-3 8-6 10-3-2-5-5-6-10Z"/><path d="M24 14v23m-6-14 6 4 6-4m-10 9 4 3 4-3"/></svg>`,
+  "背部": `<svg class="back-muscle-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M17 9c-1 4-1 7-5 10-2 2-2 6-1 10l3 10M31 9c1 4 1 7 5 10 2 2 2 6 1 10l-3 10"/><path d="M18 12c2 2 4 3 6 3s4-1 6-3M14 39c6-3 14-3 20 0"/><path class="focus" d="M17 17c2-2 4-2 7 1 3-3 5-3 7-1l-2 14c-2 3-4 5-5 6-1-1-3-3-5-6Z"/><path d="M24 17v19M17 20c2 1 4 3 7 5 3-2 5-4 7-5M18 28c2-1 4 0 6 2 2-2 4-3 6-2"/></svg>`,
   "胸部": `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="8" r="4"/><path d="M16 15c3-2 5-3 8-3s5 1 8 3l5 10-6 3-2-5v15H19V23l-2 5-6-3Z"/><path class="focus" d="M18 17c3-2 5-2 6 1 1-3 3-3 6-1l-1 9c-3 2-7 2-10 0Z"/><path d="M24 18v8"/></svg>`,
   "肩部": `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="8" r="4"/><path d="M18 15h12l7 7-5 5-3-4v15H19V23l-3 4-5-5Z"/><circle class="focus" cx="15" cy="22" r="6"/><circle class="focus" cx="33" cy="22" r="6"/></svg>`,
   "手臂": `<svg viewBox="0 0 48 48" aria-hidden="true"><path class="focus" d="M10 31c3-9 6-15 11-15 5 0 7 4 6 9 3-3 8-2 10 2 3 7-4 12-13 12-8 0-14-3-14-8Z"/><path d="M14 31c5 2 12 1 16-3m-9-12 2-6 6 2"/></svg>`,
   "臀部": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M18 9c2 6 0 10-2 15-3 8 0 15 8 15s11-7 8-15c-2-5-4-9-2-15"/><path class="focus" d="M15 25c4-5 7-4 9 0 2-4 5-5 9 0 2 8-2 13-9 13s-11-5-9-13Z"/><path d="M24 24v14"/></svg>`,
   "腿部": `<svg viewBox="0 0 48 48" aria-hidden="true"><path class="focus" d="M15 8h10l-2 17-1 14h-8l3-15Zm10 0h8l-2 16 3 15h-8l-1-14Z"/><path d="M15 39h8m3 0h9M24 9v16"/></svg>`,
-  "核心": `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M17 8c2 3 2 6 1 9-2 7-2 15 6 23 8-8 8-16 6-23-1-3-1-6 1-9"/><path class="focus ab ab1" d="M19 16h4v7h-5Z"/><path class="focus ab ab2" d="M25 16h4l1 7h-5Z"/><path class="focus ab ab3" d="M18 25h5v6h-5Z"/><path class="focus ab ab4" d="M25 25h5v6h-5Z"/><path class="focus ab ab5" d="M19 33h4v5l-3-2Z"/><path class="focus ab ab6" d="M25 33h4l-1 3-3 2Z"/><path d="M24 14v25"/></svg>`
+  "核心": `<svg class="core-muscle-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 8c2 4 2 8 0 12-2 5-2 11 1 18M33 8c-2 4-2 8 0 12 2 5 2 11-1 18"/><path d="M16 38c5 2 11 2 16 0M14 23c3 2 5 2 7 0M34 23c-3 2-5 2-7 0"/><path class="focus" d="M19 17c1-2 3-3 5-3s4 1 5 3l1 17c-4 2-8 2-12 0Z"/><path d="M24 16v18M19 22h10M19 28h10M20 34h8"/></svg>`
 };
 
 const defaultState = {

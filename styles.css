@@ -377,6 +377,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   stroke: var(--icon-deep);
   filter: none;
 }
+.part-icon .back-muscle-icon path,
+.part-icon .core-muscle-icon path { stroke-width: 2.7; }
 .body-part b { font-size: 11px; }
 .body-part small { color: var(--muted); font-size: 9px; }
 .body-part:hover .part-icon {
