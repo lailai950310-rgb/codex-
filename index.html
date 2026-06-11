@@ -12,7 +12,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/profile-avatar-girl.png" />
     <title>元气练习生</title>
-    <link rel="stylesheet" href="styles.css?v=25" />
+    <link rel="stylesheet" href="styles.css?v=26" />
   </head>
   <body>
     <main class="app" id="app">
@@ -27,7 +27,7 @@
         <section class="home-hero-shell" aria-label="今日运动激励">
           <header class="topbar">
             <div>
-              <p class="hello">糖糖</p>
+              <p class="hello" id="homeNickname">糖糖</p>
               <h1>准备好成为<br />更好的自己了吗？</h1>
             </div>
             <button class="avatar-button" type="button" data-go="profile" aria-label="打开我的页面">
@@ -44,8 +44,6 @@
             </div>
             <div class="strength-banner-copy">
               <span class="soft-label">本周运动 <b id="bannerWeekCount">0</b> 次</span>
-              <strong>真实的力量，<br />来自每一次坚持。</strong>
-              <p>今天，也比昨天更强一点。</p>
             </div>
             <div class="banner-dots" role="group" aria-label="选择轮播图">
               <button class="active" type="button" data-banner-index="0" aria-label="第 1 张" aria-current="true"></button>
@@ -68,7 +66,7 @@
                 <path class="gauge-progress" id="weightGaugeProgress" pathLength="100" d="M22 116 A98 98 0 0 1 218 116" />
                 <circle cx="22" cy="116" r="8" />
               </svg>
-              <img src="assets/hero-green-ip.png" alt="绿色健身伙伴" />
+              <img src="assets/weight-green-ip.png" alt="绿色哑铃健身伙伴" />
             </div>
             <strong class="weight-reading"><b id="homeWeight">--</b><small>斤</small></strong>
             <p class="bmi-reading" id="homeBmi">记录身高和体重后查看 BMI</p>
@@ -359,6 +357,6 @@
     <input id="importFile" type="file" accept="application/json,.json" hidden />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=20"></script>
-    <script src="script.js?v=25"></script>
+    <script src="script.js?v=26"></script>
   </body>
 </html>

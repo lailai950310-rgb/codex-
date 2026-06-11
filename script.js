@@ -236,6 +236,7 @@ function renderHome() {
   const monthRecords = recordsForPeriod("month");
   const latest = latestBody();
   const previous = state.bodyRecords.at(-2);
+  setText("homeNickname", state.profile.name);
   setText("weekCount", weekRecords.length);
   setText("weekGoal", state.profile.goal);
   setText("bannerWeekCount", weekRecords.length);
@@ -597,12 +598,19 @@ async function saveBodyRecord(event) {
   saveState(); render(); closeModal(); showToast("身体数据已保存");
 }
 
-function saveProfile(event) {
+async function saveProfile(event) {
   event.preventDefault();
   const data = new FormData(event.target);
   state.profile.name = data.get("name").trim();
   state.profile.height = Number(data.get("height"));
   state.profile.goal = Number(data.get("goal"));
+  if (currentUser && supabaseClient) {
+    const { data: userData, error } = await supabaseClient.auth.updateUser({
+      data: { nickname: state.profile.name }
+    });
+    if (error) return showToast(`昵称同步失败：${friendlyCloudError(error)}`);
+    currentUser = userData.user;
+  }
   saveState(); render(); closeModal(); showToast("个人信息已更新");
 }
 
@@ -613,6 +621,9 @@ function renderAuthModal() {
   title.textContent = isLogin ? "登录云端账号" : "注册云端账号";
   content.innerHTML = `
     <form class="modal-form" id="authForm">
+      ${isLogin ? "" : `<label>昵称
+        <input name="nickname" maxlength="12" autocomplete="nickname" placeholder="例如：糖糖" required />
+      </label>`}
       <label>邮箱
         <input name="email" type="email" autocomplete="email" placeholder="name@example.com" required />
       </label>
@@ -642,6 +653,7 @@ async function submitAuthForm(event) {
   const data = new FormData(form);
   const email = data.get("email").trim();
   const password = data.get("password");
+  const nickname = data.get("nickname")?.trim();
   setCloudBusy(true);
 
   const result = authMode === "login"
@@ -649,7 +661,10 @@ async function submitAuthForm(event) {
     : await supabaseClient.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${location.origin}${location.pathname}` }
+        options: {
+          emailRedirectTo: `${location.origin}${location.pathname}`,
+          data: { nickname }
+        }
       });
   setCloudBusy(false);
 
@@ -714,6 +729,7 @@ async function applyAuthSession(session, event) {
   if (nextUser?.id === currentUser?.id && event !== "INITIAL_SESSION") return;
   currentUser = nextUser;
   if (currentUser) {
+    state.profile.name = accountNickname(currentUser);
     await loadCloudData();
   } else {
     state = structuredClone(guestState || defaultState);
@@ -747,7 +763,10 @@ async function loadCloudData() {
 
   state = {
     ...structuredClone(defaultState),
-    profile: structuredClone(guestState?.profile || defaultState.profile),
+    profile: {
+      ...structuredClone(guestState?.profile || defaultState.profile),
+      name: accountNickname(currentUser)
+    },
     reminder: structuredClone(guestState?.reminder || defaultState.reminder),
     workouts: workoutsResult.data.map(fromCloudWorkout),
     bodyRecords: bodyResult.data.map(fromCloudBodyRecord)
@@ -872,6 +891,13 @@ function friendlyCloudError(error) {
 
 function validUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value || "");
+}
+
+function accountNickname(user) {
+  return user?.user_metadata?.nickname
+    || user?.user_metadata?.name
+    || user?.email?.split("@")[0]
+    || defaultState.profile.name;
 }
 
 function createUuid() {
