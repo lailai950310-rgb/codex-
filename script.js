@@ -418,10 +418,8 @@ function renderProfile() {
 }
 
 function renderAccount() {
-  const guestNotice = document.querySelector("#guestNotice");
   const accountAction = document.querySelector("#accountAction");
   const migrationCard = document.querySelector("#migrationCard");
-  guestNotice.hidden = Boolean(currentUser);
   setText("accountStatusLabel", currentUser ? "云端账号" : "游客模式");
   setText("accountStatusText", currentUser ? "数据已绑定当前登录账号" : "登录后可跨设备保存记录");
   setText("accountEmail", currentUser?.email || "本地数据可能因清理浏览器而丢失");
