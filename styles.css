@@ -177,24 +177,18 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .strength-banner .hero-info-card {
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + 86px);
-  bottom: 64px;
   left: 18px;
   z-index: 3;
   width: min(69%, 310px);
-  border: 1px solid rgba(255, 255, 255, .62);
-  border-radius: 28px;
-  padding: 24px 20px 20px;
-  background: linear-gradient(145deg, rgba(255,255,255,.86), rgba(241,255,231,.66));
-  box-shadow: 0 16px 42px rgba(37, 86, 43, .12), inset 0 1px 0 rgba(255,255,255,.84);
-  backdrop-filter: blur(15px) saturate(120%);
-  -webkit-backdrop-filter: blur(15px) saturate(120%);
+  padding: 0;
+  background: transparent;
 }
 .hero-info-card h1 {
   color: #26790f;
   font-size: clamp(42px, 12vw, 58px);
   line-height: .96;
   letter-spacing: -4px;
-  text-shadow: 0 4px 20px rgba(73, 154, 38, .12);
+  text-shadow: 0 2px 16px rgba(230, 255, 212, .7);
 }
 .strength-banner .hero-question {
   margin-top: 24px;
@@ -203,6 +197,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   font-weight: 950;
   line-height: 1.22;
   letter-spacing: -1.3px;
+  text-shadow: 0 1px 10px rgba(244, 255, 237, .9);
 }
 .strength-banner .hero-question strong {
   position: relative;
@@ -226,6 +221,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   font-size: 12px;
   font-weight: 700;
   line-height: 1.55;
+  text-shadow: 0 1px 8px rgba(244, 255, 237, .92);
 }
 .hero-week-label {
   display: inline-flex;
