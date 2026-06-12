@@ -162,20 +162,18 @@ function restartBannerTimer() {
 async function saveQuickWorkout(event) {
   event.preventDefault();
   const workoutDate = document.querySelector("#workoutDate").value;
-  const workoutTime = document.querySelector("#workoutTime").value;
   const duration = selection.duration === "custom"
     ? Number(document.querySelector("#customDuration").value)
     : Number(selection.duration);
   const needsTrainingParts = isStrengthType(selection.type);
-  if (!workoutDate || !workoutTime) return showToast("请选择运动日期和开始时间");
-  if (new Date(`${workoutDate}T${workoutTime}:00`).getTime() > Date.now()) return showToast("运动时间不能晚于当前时间");
+  if (!workoutDate) return showToast("请选择运动日期");
+  if (workoutDate > formatDate(new Date())) return showToast("运动日期不能晚于今天");
   if (needsTrainingParts && !selection.parts.length) return showToast("请至少选择一个训练部位");
   if (!duration || duration < 5) return showToast("运动时长至少为 5 分钟");
 
   const record = {
     id: createUuid(),
     date: workoutDate,
-    time: workoutTime,
     type: selection.type,
     duration,
     intensity: selection.intensity,
@@ -303,7 +301,7 @@ function renderRecords() {
       <div>
         <h3>${escapeHtml(workoutTypeLabel(item.type))} · ${item.duration} 分钟</h3>
         <p>${[
-          [item.date, formatWorkoutTime(item.time)].filter(Boolean).join(" "),
+          item.date,
           isCardioType(item.type) ? "" : escapeHtml((item.parts || []).join("、")),
           escapeHtml(item.intensity)
         ].filter(Boolean).join(" · ")}</p>
@@ -538,7 +536,7 @@ function renderWorkoutHistory(period) {
         ? `<div class="history-list">${records.map((item) => {
             const parts = isStrengthType(item.type) ? (item.parts || []).join("、") : "";
             return `<article class="history-item">
-              <div class="history-date"><b>${formatHistoryDate(item.date)}</b><span>${workoutWeekday(item.date)}${item.time ? ` · ${formatWorkoutTime(item.time)}` : ""}</span></div>
+              <div class="history-date"><b>${formatHistoryDate(item.date)}</b><span>${workoutWeekday(item.date)}</span></div>
               <div>
                 <strong>${escapeHtml(workoutTypeLabel(item.type))}</strong>
                 <p>${parts ? `${escapeHtml(parts)} · ` : ""}${escapeHtml(item.intensity)}</p>
@@ -1249,12 +1247,10 @@ function formatDate(date) {
 function setWorkoutDateTimeDefaults() {
   const now = new Date();
   const dateInput = document.querySelector("#workoutDate");
-  const timeInput = document.querySelector("#workoutTime");
   if (dateInput) {
     dateInput.value = formatDate(now);
     dateInput.max = formatDate(now);
   }
-  if (timeInput) timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
 function formatWorkoutTime(value) {

@@ -660,9 +660,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .form-section h2, .textarea-label { display: block; margin: 0 0 12px; font-size: 15px; font-weight: 900; }
 .form-section h2 small, .textarea-label small { color: var(--muted); font-size: 11px; font-weight: 500; }
 .workout-datetime-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
-  gap: 10px;
+  display: block;
 }
 .workout-datetime-grid label {
   display: grid;
