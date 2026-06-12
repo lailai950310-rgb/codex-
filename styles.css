@@ -662,6 +662,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .choice.active { border-color: #8dda62; background: #f0fae9; }
 .choice-art { display: grid; width: 55px; height: 55px; margin: 0 auto 6px; place-items: center; border-radius: 17px; font-size: 21px; font-weight: 1000; }
 .choice-art svg { width: 34px; height: 34px; }
+.choice-art .conditioning-shoe-icon {
+  width: 39px;
+  height: 30px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
 .choice-art svg path, .choice-art svg circle {
   fill: none;
   stroke: currentColor;
