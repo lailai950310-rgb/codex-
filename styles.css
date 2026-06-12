@@ -75,7 +75,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   margin: calc(-1 * env(safe-area-inset-top, 0px)) -16px 22px;
   border: 0;
   border-radius: 0 0 34px 34px;
-  min-height: calc(540px + env(safe-area-inset-top, 0px));
+  min-height: calc(470px + env(safe-area-inset-top, 0px));
   padding: 0;
   background: #dff3b8;
   box-shadow: none;
@@ -120,7 +120,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .strength-banner {
   position: relative;
   display: block;
-  min-height: calc(540px + env(safe-area-inset-top, 0px));
+  min-height: calc(470px + env(safe-area-inset-top, 0px));
   overflow: hidden;
   touch-action: pan-y;
   padding: 0;
@@ -215,19 +215,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   content: "";
   z-index: -1;
 }
-.strength-banner .hero-subtitle {
-  margin-top: 16px;
-  color: #667069;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.55;
-  text-shadow: 0 1px 8px rgba(244, 255, 237, .92);
-}
 .hero-week-label {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  margin-top: 22px;
+  margin-top: 18px;
   border: 1px solid rgba(255,255,255,.9);
   border-radius: 999px;
   padding: 7px 13px 7px 8px;
@@ -291,7 +283,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   color: var(--green-dark); background: rgba(255,255,255,.72); font-size: 12px; font-weight: 800;
 }
 
-.home-overview { position: relative; z-index: 5; margin: -34px 0 12px; }
+.home-overview { position: relative; z-index: 5; margin: -26px 0 12px; }
 .overview-heading { margin: 22px 2px 12px; }
 .overview-heading h2 { font-size: 20px; letter-spacing: -.3px; }
 .trend-more { display: inline-flex; align-items: center; gap: 3px; }
