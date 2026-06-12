@@ -33,6 +33,7 @@ let guestState = structuredClone(state);
 let authMode = "login";
 let cloudBusy = false;
 let workoutTimeColumnAvailable = true;
+let bodyHeightColumnAvailable = true;
 
 document.body.addEventListener("click", (event) => {
   const go = event.target.closest("[data-go]");
@@ -245,6 +246,7 @@ function renderHome() {
   const weekCount = countWorkoutDays(weekRecords);
   const monthCount = countWorkoutDays(monthRecords);
   const latest = latestBody();
+  const latestHeight = latestBodyHeight();
   const previous = state.bodyRecords.at(-2);
   setText("homeNickname", state.profile.name);
   setText("weekCount", weekCount);
@@ -255,8 +257,8 @@ function renderHome() {
   setText("weightChange", latest
     ? (previous ? `较上次 ${signed(kgToJin(latest.weight - previous.weight))} 斤，继续保持` : "今天保持得不错，继续加油")
     : "点击记录身体数据");
-  const bmi = latest && Number.isFinite(state.profile.height)
-    ? latest.weight / ((state.profile.height / 100) ** 2)
+  const bmi = latest && Number.isFinite(latestHeight)
+    ? latest.weight / ((latestHeight / 100) ** 2)
     : null;
   setText("homeBmi", bmi
     ? `BMI：${bmi.toFixed(1)} ${bmiStatus(bmi)}`
@@ -416,9 +418,10 @@ function roundRect(ctx, x, y, width, height, radius) {
 function renderProfile() {
   const latest = latestBody();
   const latestFat = latestFatRecord();
+  const latestHeight = latestBodyHeight();
   const weekCount = countWorkoutDays(recordsForPeriod("week"));
   setText("profileName", state.profile.name);
-  setText("profileHeight", Number.isFinite(state.profile.height) ? state.profile.height : "--");
+  setText("profileHeight", Number.isFinite(latestHeight) ? latestHeight : "--");
   setText("profileWeight", latest ? kgToJin(latest.weight).toFixed(1) : "--");
   setText("profileFat", latestFat ? latestFat.fat.toFixed(1) : "--");
   setText("goalProgressText", weekCount);
@@ -474,10 +477,12 @@ function openModal(type) {
   } else if (type === "body") {
     const latest = latestBody();
     const latestFat = latestFatRecord();
+    const latestHeight = latestBodyHeight();
     title.textContent = "记录身体数据";
     content.innerHTML = `
       <form class="modal-form" id="bodyForm">
         <label>日期<input name="date" type="date" value="${formatDate(new Date())}" required /></label>
+        <label>身高 cm<input name="height" type="number" min="100" max="220" step="0.1" value="${Number.isFinite(latestHeight) ? latestHeight : ""}" placeholder="请输入身高（cm）" required /></label>
         <label>体重 斤<input name="weight" type="number" min="50" max="500" step="0.1" value="${latest ? kgToJin(latest.weight).toFixed(1) : ""}" placeholder="请输入体重（斤）" required /></label>
         <label>体脂率 % <small>（选填）</small><input name="fat" type="number" min="3" max="70" step="0.1" value="${latestFat ? latestFat.fat : ""}" placeholder="可不填" /></label>
         <button class="primary-button" type="submit">保存身体数据</button>
@@ -599,6 +604,7 @@ async function saveBodyRecord(event) {
   const record = {
     id: createUuid(),
     date: data.get("date"),
+    height: Number(data.get("height")),
     weight: jinToKg(Number(data.get("weight")))
   };
   if (fatValue !== "") record.fat = Number(fatValue);
@@ -606,6 +612,7 @@ async function saveBodyRecord(event) {
   state.bodyRecords = state.bodyRecords.filter((item) => item.date !== record.date);
   state.bodyRecords.push(record);
   state.bodyRecords.sort((a, b) => a.date.localeCompare(b.date));
+  state.profile.height = record.height;
   saveState(); render(); closeModal(); showToast("身体数据已保存");
 }
 
@@ -754,10 +761,7 @@ async function loadCloudData() {
   setCloudBusy(true);
   const [workoutsResult, bodyResult] = await Promise.all([
     fetchCloudWorkouts(),
-    supabaseClient
-      .from("body_records")
-      .select("id,record_date,weight_kg,body_fat_percent")
-      .order("record_date", { ascending: true })
+    fetchCloudBodyRecords()
   ]);
   setCloudBusy(false);
 
@@ -768,15 +772,19 @@ async function loadCloudData() {
     return;
   }
 
+  const cloudBodyRecords = bodyResult.data.map(fromCloudBodyRecord);
+  const cloudHeight = [...cloudBodyRecords].reverse().find((record) => Number.isFinite(record.height))?.height;
+  const metadataHeight = Number(currentUser.user_metadata?.height_cm);
   state = {
     ...structuredClone(defaultState),
     profile: {
       ...structuredClone(guestState?.profile || defaultState.profile),
-      name: accountNickname(currentUser)
+      name: accountNickname(currentUser),
+      height: cloudHeight ?? (Number.isFinite(metadataHeight) ? metadataHeight : guestState?.profile?.height || null)
     },
     reminder: structuredClone(guestState?.reminder || defaultState.reminder),
     workouts: workoutsResult.data.map(fromCloudWorkout),
-    bodyRecords: bodyResult.data.map(fromCloudBodyRecord)
+    bodyRecords: cloudBodyRecords
   };
   render();
 }
@@ -801,6 +809,24 @@ async function fetchCloudWorkouts() {
   return result;
 }
 
+async function fetchCloudBodyRecords() {
+  let result = await supabaseClient
+    .from("body_records")
+    .select("id,record_date,height_cm,weight_kg,body_fat_percent")
+    .order("record_date", { ascending: true });
+
+  if (isMissingBodyHeightColumn(result.error)) {
+    bodyHeightColumnAvailable = false;
+    result = await supabaseClient
+      .from("body_records")
+      .select("id,record_date,weight_kg,body_fat_percent")
+      .order("record_date", { ascending: true });
+  } else if (!result.error) {
+    bodyHeightColumnAvailable = true;
+  }
+  return result;
+}
+
 async function insertCloudWorkout(record) {
   let payload = workoutTimeColumnAvailable ? toCloudWorkout(record) : toLegacyCloudWorkout(record);
   let { error } = await supabaseClient.from("workout_records").insert(payload);
@@ -817,14 +843,25 @@ async function insertCloudWorkout(record) {
 }
 
 async function upsertCloudBodyRecord(record) {
-  const payload = toCloudBodyRecord(record);
-  const { error } = await supabaseClient
+  let payload = bodyHeightColumnAvailable ? toCloudBodyRecord(record) : toLegacyCloudBodyRecord(record);
+  let { error } = await supabaseClient
     .from("body_records")
     .upsert(payload, { onConflict: "user_id,record_date" });
+  if (isMissingBodyHeightColumn(error)) {
+    bodyHeightColumnAvailable = false;
+    payload = toLegacyCloudBodyRecord(record);
+    ({ error } = await supabaseClient
+      .from("body_records")
+      .upsert(payload, { onConflict: "user_id,record_date" }));
+  }
   if (error) {
     showToast(`保存失败：${friendlyCloudError(error)}`);
     return false;
   }
+  const { data: userData } = await supabaseClient.auth.updateUser({
+    data: { height_cm: Number(record.height) }
+  });
+  if (userData?.user) currentUser = userData.user;
   return true;
 }
 
@@ -836,10 +873,13 @@ async function migrateLocalData() {
       id: validUuid(record.id) ? record.id : createUuid()
     }))
     .map((record) => workoutTimeColumnAvailable ? toCloudWorkout(record) : toLegacyCloudWorkout(record));
-  const bodyRecords = guestState.bodyRecords.map((record) => toCloudBodyRecord({
-    ...record,
-    id: validUuid(record.id) ? record.id : createUuid()
-  }));
+  const bodyRecords = guestState.bodyRecords
+    .map((record) => ({
+      ...record,
+      height: Number.isFinite(record.height) ? record.height : guestState.profile?.height,
+      id: validUuid(record.id) ? record.id : createUuid()
+    }))
+    .map((record) => bodyHeightColumnAvailable ? toCloudBodyRecord(record) : toLegacyCloudBodyRecord(record));
   if (!workouts.length && !bodyRecords.length) return;
   if (!confirm(`将 ${workouts.length} 条运动记录和 ${bodyRecords.length} 条身体记录迁移到 ${currentUser.email}？`)) return;
 
@@ -904,14 +944,26 @@ function isMissingWorkoutTimeColumn(error) {
   return `${error.code || ""} ${error.message || ""}`.includes("workout_time");
 }
 
+function isMissingBodyHeightColumn(error) {
+  if (!error) return false;
+  return `${error.code || ""} ${error.message || ""}`.includes("height_cm");
+}
+
 function toCloudBodyRecord(record) {
   return {
     id: record.id,
     user_id: currentUser.id,
     record_date: record.date,
+    height_cm: Number.isFinite(record.height) ? Number(record.height) : null,
     weight_kg: Number(record.weight),
     body_fat_percent: Number.isFinite(record.fat) ? Number(record.fat) : null
   };
+}
+
+function toLegacyCloudBodyRecord(record) {
+  const payload = toCloudBodyRecord(record);
+  delete payload.height_cm;
+  return payload;
 }
 
 function fromCloudBodyRecord(record) {
@@ -920,6 +972,7 @@ function fromCloudBodyRecord(record) {
     date: record.record_date,
     weight: Number(record.weight_kg)
   };
+  if (record.height_cm !== null && record.height_cm !== undefined) result.height = Number(record.height_cm);
   if (record.body_fat_percent !== null) result.fat = Number(record.body_fat_percent);
   return result;
 }
@@ -1126,6 +1179,13 @@ function workoutTypeLabel(type) {
 
 function latestBody() {
   return state.bodyRecords.at(-1) || null;
+}
+
+function latestBodyHeight() {
+  for (let index = state.bodyRecords.length - 1; index >= 0; index -= 1) {
+    if (Number.isFinite(state.bodyRecords[index].height)) return state.bodyRecords[index].height;
+  }
+  return Number.isFinite(state.profile.height) ? state.profile.height : null;
 }
 
 function latestFatRecord() {

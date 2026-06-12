@@ -72,7 +72,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   isolation: isolate;
   overflow: hidden;
   width: calc(100% + 32px);
-  margin: 0 -16px 22px;
+  margin: calc(-1 * env(safe-area-inset-top, 0px)) -16px 22px;
   border: 0;
   border-radius: 0 0 34px 34px;
   min-height: calc(480px + env(safe-area-inset-top, 0px));

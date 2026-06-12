@@ -30,12 +30,17 @@ create table if not exists public.body_records (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   record_date date not null,
+  height_cm numeric(5, 1) check (height_cm between 100 and 220),
   weight_kg numeric(5, 1) not null check (weight_kg between 25 and 250),
   body_fat_percent numeric(4, 1) check (body_fat_percent between 3 and 70),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique(user_id, record_date)
 );
+
+alter table public.body_records
+  add column if not exists height_cm numeric(5, 1)
+  check (height_cm between 100 and 220);
 
 create index if not exists body_records_user_date_idx
   on public.body_records(user_id, record_date desc);

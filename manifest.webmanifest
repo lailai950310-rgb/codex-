@@ -7,8 +7,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f7fbf5",
-  "theme_color": "#20bd55",
+  "background_color": "#173623",
+  "theme_color": "#173623",
   "icons": [
     {
       "src": "assets/profile-avatar-girl.png",
