@@ -4,6 +4,7 @@ create table if not exists public.workout_records (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   workout_date date not null,
+  workout_time time,
   workout_type text not null check (workout_type in ('力量训练', '有氧训练', '体能训练')),
   duration_minutes integer not null check (duration_minutes between 5 and 300),
   intensity text not null check (intensity in ('轻松', '适中', '挑战', '超燃')),
@@ -13,8 +14,17 @@ create table if not exists public.workout_records (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists workout_records_user_date_idx
-  on public.workout_records(user_id, workout_date desc);
+alter table public.workout_records
+  add column if not exists workout_time time;
+
+update public.workout_records
+set workout_time = (created_at at time zone 'Asia/Shanghai')::time
+where workout_time is null;
+
+drop index if exists public.workout_records_user_date_idx;
+
+create index workout_records_user_date_idx
+  on public.workout_records(user_id, workout_date desc, workout_time desc);
 
 create table if not exists public.body_records (
   id uuid primary key default gen_random_uuid(),

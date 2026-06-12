@@ -2,6 +2,8 @@
 
 1. Create a Supabase project.
 2. Open **SQL Editor**, paste `supabase-schema.sql`, and run it.
+   - For an existing project created before workout time support, run
+     `supabase-add-workout-time.sql` once.
 3. Open **Project Settings > API** and copy:
    - Project URL
    - Publishable key (or legacy `anon` key)

@@ -32,6 +32,7 @@ let currentUser = null;
 let guestState = structuredClone(state);
 let authMode = "login";
 let cloudBusy = false;
+let workoutTimeColumnAvailable = true;
 
 document.body.addEventListener("click", (event) => {
   const go = event.target.closest("[data-go]");
@@ -159,16 +160,21 @@ function restartBannerTimer() {
 
 async function saveQuickWorkout(event) {
   event.preventDefault();
+  const workoutDate = document.querySelector("#workoutDate").value;
+  const workoutTime = document.querySelector("#workoutTime").value;
   const duration = selection.duration === "custom"
     ? Number(document.querySelector("#customDuration").value)
     : Number(selection.duration);
   const needsTrainingParts = isStrengthType(selection.type);
+  if (!workoutDate || !workoutTime) return showToast("请选择运动日期和开始时间");
+  if (new Date(`${workoutDate}T${workoutTime}:00`).getTime() > Date.now()) return showToast("运动时间不能晚于当前时间");
   if (needsTrainingParts && !selection.parts.length) return showToast("请至少选择一个训练部位");
   if (!duration || duration < 5) return showToast("运动时长至少为 5 分钟");
 
   const record = {
     id: createUuid(),
-    date: formatDate(new Date()),
+    date: workoutDate,
+    time: workoutTime,
     type: selection.type,
     duration,
     intensity: selection.intensity,
@@ -176,9 +182,11 @@ async function saveQuickWorkout(event) {
     note: document.querySelector("#recordNote").value.trim()
   };
   if (currentUser && !(await insertCloudWorkout(record))) return;
-  state.workouts.unshift(record);
+  state.workouts.push(record);
+  sortWorkoutRecords(state.workouts);
   document.querySelector("#recordNote").value = "";
   document.querySelector("#noteCount").textContent = "0";
+  setWorkoutDateTimeDefaults();
   saveState();
   render();
   showToast("运动记录已保存");
@@ -293,7 +301,7 @@ function renderRecords() {
       <div>
         <h3>${escapeHtml(workoutTypeLabel(item.type))} · ${item.duration} 分钟</h3>
         <p>${[
-          item.date,
+          [item.date, formatWorkoutTime(item.time)].filter(Boolean).join(" "),
           isCardioType(item.type) ? "" : escapeHtml((item.parts || []).join("、")),
           escapeHtml(item.intensity)
         ].filter(Boolean).join(" · ")}</p>
@@ -498,7 +506,8 @@ function openModal(type) {
 function renderWorkoutHistory(period) {
   const target = document.querySelector("#workoutHistoryContent");
   if (!target) return;
-  const records = recordsForPeriod(period).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const records = recordsForPeriod(period).slice();
+  sortWorkoutRecords(records);
   const workoutDays = countWorkoutDays(records);
   const totalMinutes = records.reduce((sum, item) => sum + Number(item.duration || 0), 0);
   const partSummary = summarizeWorkoutParts(records);
@@ -524,7 +533,7 @@ function renderWorkoutHistory(period) {
         ? `<div class="history-list">${records.map((item) => {
             const parts = isStrengthType(item.type) ? (item.parts || []).join("、") : "";
             return `<article class="history-item">
-              <div class="history-date"><b>${formatHistoryDate(item.date)}</b><span>${workoutWeekday(item.date)}</span></div>
+              <div class="history-date"><b>${formatHistoryDate(item.date)}</b><span>${workoutWeekday(item.date)}${item.time ? ` · ${formatWorkoutTime(item.time)}` : ""}</span></div>
               <div>
                 <strong>${escapeHtml(workoutTypeLabel(item.type))}</strong>
                 <p>${parts ? `${escapeHtml(parts)} · ` : ""}${escapeHtml(item.intensity)}</p>
@@ -744,11 +753,7 @@ async function loadCloudData() {
   if (!supabaseClient || !currentUser) return;
   setCloudBusy(true);
   const [workoutsResult, bodyResult] = await Promise.all([
-    supabaseClient
-      .from("workout_records")
-      .select("id,workout_date,workout_type,duration_minutes,intensity,body_parts,note")
-      .order("workout_date", { ascending: false })
-      .order("created_at", { ascending: false }),
+    fetchCloudWorkouts(),
     supabaseClient
       .from("body_records")
       .select("id,record_date,weight_kg,body_fat_percent")
@@ -776,8 +781,34 @@ async function loadCloudData() {
   render();
 }
 
+async function fetchCloudWorkouts() {
+  let result = await supabaseClient
+    .from("workout_records")
+    .select("id,workout_date,workout_time,workout_type,duration_minutes,intensity,body_parts,note,created_at")
+    .order("workout_date", { ascending: false })
+    .order("workout_time", { ascending: false });
+
+  if (isMissingWorkoutTimeColumn(result.error)) {
+    workoutTimeColumnAvailable = false;
+    result = await supabaseClient
+      .from("workout_records")
+      .select("id,workout_date,workout_type,duration_minutes,intensity,body_parts,note,created_at")
+      .order("workout_date", { ascending: false })
+      .order("created_at", { ascending: false });
+  } else if (!result.error) {
+    workoutTimeColumnAvailable = true;
+  }
+  return result;
+}
+
 async function insertCloudWorkout(record) {
-  const { error } = await supabaseClient.from("workout_records").insert(toCloudWorkout(record));
+  let payload = workoutTimeColumnAvailable ? toCloudWorkout(record) : toLegacyCloudWorkout(record);
+  let { error } = await supabaseClient.from("workout_records").insert(payload);
+  if (isMissingWorkoutTimeColumn(error)) {
+    workoutTimeColumnAvailable = false;
+    payload = toLegacyCloudWorkout(record);
+    ({ error } = await supabaseClient.from("workout_records").insert(payload));
+  }
   if (error) {
     showToast(`保存失败：${friendlyCloudError(error)}`);
     return false;
@@ -799,10 +830,12 @@ async function upsertCloudBodyRecord(record) {
 
 async function migrateLocalData() {
   if (!currentUser || !guestState) return;
-  const workouts = guestState.workouts.map((record) => toCloudWorkout({
-    ...record,
-    id: validUuid(record.id) ? record.id : createUuid()
-  }));
+  const workouts = guestState.workouts
+    .map((record) => ({
+      ...record,
+      id: validUuid(record.id) ? record.id : createUuid()
+    }))
+    .map((record) => workoutTimeColumnAvailable ? toCloudWorkout(record) : toLegacyCloudWorkout(record));
   const bodyRecords = guestState.bodyRecords.map((record) => toCloudBodyRecord({
     ...record,
     id: validUuid(record.id) ? record.id : createUuid()
@@ -837,6 +870,7 @@ function toCloudWorkout(record) {
     id: record.id,
     user_id: currentUser.id,
     workout_date: record.date,
+    workout_time: record.time || null,
     workout_type: workoutTypeLabel(record.type),
     duration_minutes: Number(record.duration),
     intensity: record.intensity,
@@ -845,16 +879,29 @@ function toCloudWorkout(record) {
   };
 }
 
+function toLegacyCloudWorkout(record) {
+  const payload = toCloudWorkout(record);
+  delete payload.workout_time;
+  payload.created_at = workoutTimestamp(record);
+  return payload;
+}
+
 function fromCloudWorkout(record) {
   return {
     id: record.id,
     date: record.workout_date,
+    time: record.workout_time ? String(record.workout_time).slice(0, 5) : timeFromTimestamp(record.created_at),
     type: record.workout_type,
     duration: Number(record.duration_minutes),
     intensity: record.intensity,
     parts: record.body_parts || [],
     note: record.note || ""
   };
+}
+
+function isMissingWorkoutTimeColumn(error) {
+  if (!error) return false;
+  return `${error.code || ""} ${error.message || ""}`.includes("workout_time");
 }
 
 function toCloudBodyRecord(record) {
@@ -947,6 +994,7 @@ async function importData(event) {
       profile: { ...defaultState.profile, ...imported.profile },
       reminder: { ...defaultState.reminder, ...imported.reminder }
     };
+    sortWorkoutRecords(state.workouts);
     saveState();
     render();
     showToast("备份数据已恢复");
@@ -1096,7 +1144,12 @@ function loadState() {
   try {
     LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return stored ? { ...defaultState, ...stored, profile: { ...defaultState.profile, ...stored.profile } } : structuredClone(defaultState);
+    const loaded = stored
+      ? { ...defaultState, ...stored, profile: { ...defaultState.profile, ...stored.profile } }
+      : structuredClone(defaultState);
+    loaded.workouts = Array.isArray(loaded.workouts) ? loaded.workouts : [];
+    sortWorkoutRecords(loaded.workouts);
+    return loaded;
   } catch {
     return JSON.parse(JSON.stringify(defaultState));
   }
@@ -1133,6 +1186,45 @@ function formatDate(date) {
   return local.toISOString().slice(0, 10);
 }
 
+function setWorkoutDateTimeDefaults() {
+  const now = new Date();
+  const dateInput = document.querySelector("#workoutDate");
+  const timeInput = document.querySelector("#workoutTime");
+  if (dateInput) {
+    dateInput.value = formatDate(now);
+    dateInput.max = formatDate(now);
+  }
+  if (timeInput) timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+}
+
+function formatWorkoutTime(value) {
+  return value ? String(value).slice(0, 5) : "";
+}
+
+function sortWorkoutRecords(records) {
+  records.sort((a, b) => {
+    const first = `${a.date || ""}T${formatWorkoutTime(a.time) || "00:00"}`;
+    const second = `${b.date || ""}T${formatWorkoutTime(b.time) || "00:00"}`;
+    return second.localeCompare(first);
+  });
+  return records;
+}
+
+function workoutTimestamp(record) {
+  const time = formatWorkoutTime(record.time) || "12:00";
+  return new Date(`${record.date}T${time}:00+08:00`).toISOString();
+}
+
+function timeFromTimestamp(value) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Shanghai"
+  }).format(new Date(value));
+}
+
 function signed(value) {
   const rounded = Number(value.toFixed(1));
   return `${rounded > 0 ? "+" : ""}${rounded.toFixed(1)}`;
@@ -1154,6 +1246,7 @@ window.addEventListener("resize", () => {
   if (document.querySelector("#page-trends").classList.contains("active")) renderCharts();
 });
 
+setWorkoutDateTimeDefaults();
 render();
 initBannerCarousel();
 const initialTab = ["home", "records", "trends", "profile"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "home";
