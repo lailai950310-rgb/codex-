@@ -156,7 +156,7 @@ function showBanner(index) {
 
 function restartBannerTimer() {
   clearInterval(bannerTimer);
-  bannerTimer = setInterval(() => showBanner(bannerIndex + 1), 4800);
+  bannerTimer = setInterval(() => showBanner(bannerIndex + 1), 4200);
 }
 
 async function saveQuickWorkout(event) {
