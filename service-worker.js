@@ -1,10 +1,10 @@
-const CACHE_NAME = "vitality-fitness-v35";
+const CACHE_NAME = "vitality-fitness-v36";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=35",
+  "./styles.css?v=36",
   "./supabase-config.js?v=20",
-  "./script.js?v=35",
+  "./script.js?v=36",
   "./manifest.webmanifest",
   "./assets/profile-avatar-girl.png",
   "./assets/weight-green-ip.png",

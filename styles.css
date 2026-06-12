@@ -186,7 +186,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .strength-banner .banner-slide-back { object-position: 50% 45%; }
 .strength-banner .banner-slide-portrait { object-position: 50% 38%; }
 .strength-banner .banner-slide-squat { object-position: 50% 42%; }
-.strength-banner .banner-slide-stretch { object-position: 42% 46%; }
+.strength-banner .banner-slide-stretch { object-position: 50% 36%; }
 .strength-banner .banner-slide.active {
   opacity: 1;
   transform: scale(1);
