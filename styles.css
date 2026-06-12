@@ -178,11 +178,15 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   height: 100%;
   max-height: none;
   object-fit: cover;
-  object-position: 61% center;
+  object-position: 50% center;
   opacity: 0;
   transform: scale(1.025);
   transition: opacity .55s ease, transform 4.8s ease;
 }
+.strength-banner .banner-slide-back { object-position: 50% 45%; }
+.strength-banner .banner-slide-portrait { object-position: 50% 38%; }
+.strength-banner .banner-slide-squat { object-position: 50% 42%; }
+.strength-banner .banner-slide-stretch { object-position: 42% 46%; }
 .strength-banner .banner-slide.active {
   opacity: 1;
   transform: scale(1);
